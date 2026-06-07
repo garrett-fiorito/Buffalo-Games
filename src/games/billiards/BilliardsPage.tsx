@@ -1,23 +1,34 @@
 import Matter from "matter-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MutableRefObject, PointerEvent } from "react";
-import { ArrowLeft, RotateCcw, Target } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, RotateCcw, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   BALL_RADIUS,
   HEAD_SPOT,
   POCKET_RADIUS,
+  SHOT_SPEED_MULTIPLIER,
   TABLE_HEIGHT,
   TABLE_WIDTH,
+  createInitialAssignments,
   createPracticeRack,
+  evaluateShot,
   findContainingPocket,
-  getPracticeSummary,
+  getGroupLabel,
+  getRulesSummary,
   isVelocityStopped,
   pockets,
 } from "./billiardsEngine";
-import type { BallDefinition, PocketedBall, Vector2 } from "./billiardsTypes";
+import type {
+  BallDefinition,
+  BallKind,
+  PlayerAssignments,
+  PlayerId,
+  PocketedBall,
+  Vector2,
+} from "./billiardsTypes";
 
-const { Bodies, Body, Composite, Engine } = Matter;
+const { Bodies, Body, Composite, Engine, Events } = Matter;
 
 type BilliardsViewState = {
   pocketed: PocketedBall[];
@@ -25,6 +36,9 @@ type BilliardsViewState = {
   status: string;
   moving: boolean;
   aimingPower: number;
+  currentPlayer: PlayerId;
+  assignments: PlayerAssignments;
+  winner: PlayerId | null;
 };
 
 type AimState = {
@@ -32,26 +46,41 @@ type AimState = {
   pointer: Vector2;
 };
 
-const initialViewState: BilliardsViewState = {
-  pocketed: [],
-  shotCount: 0,
-  status: "Pull back from the cue ball and release to shoot.",
-  moving: false,
-  aimingPower: 0,
-};
+function createInitialViewState(): BilliardsViewState {
+  return {
+    pocketed: [],
+    shotCount: 0,
+    status: "Player 1 breaks. Pull back from the cue ball and release to shoot.",
+    moving: false,
+    aimingPower: 0,
+    currentPlayer: 1,
+    assignments: createInitialAssignments(),
+    winner: null,
+  };
+}
 
 export function BilliardsPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const tableShellRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const bodiesRef = useRef(new Map<string, Matter.Body>());
   const ballsRef = useRef(createPracticeRack());
   const pocketedRef = useRef<PocketedBall[]>([]);
+  const newlyPocketedRef = useRef<PocketedBall[]>([]);
+  const pocketedBeforeShotRef = useRef<PocketedBall[]>([]);
   const aimRef = useRef<AimState>({ active: false, pointer: HEAD_SPOT });
   const scratchPendingRef = useRef(false);
+  const scratchThisShotRef = useRef(false);
+  const firstContactRef = useRef<BallKind | null>(null);
+  const shotInProgressRef = useRef(false);
   const movingRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const shotCountRef = useRef(0);
-  const [viewState, setViewState] = useState<BilliardsViewState>(initialViewState);
+  const currentPlayerRef = useRef<PlayerId>(1);
+  const assignmentsRef = useRef<PlayerAssignments>(createInitialAssignments());
+  const winnerRef = useRef<PlayerId | null>(null);
+  const [viewState, setViewState] = useState<BilliardsViewState>(() => createInitialViewState());
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const syncView = useCallback((updates: Partial<BilliardsViewState>) => {
     setViewState((current) => ({ ...current, ...updates }));
@@ -68,13 +97,49 @@ export function BilliardsPage() {
     bodiesRef.current.clear();
     ballsRef.current = createPracticeRack();
     pocketedRef.current = [];
+    newlyPocketedRef.current = [];
+    pocketedBeforeShotRef.current = [];
     scratchPendingRef.current = false;
+    scratchThisShotRef.current = false;
+    firstContactRef.current = null;
+    shotInProgressRef.current = false;
     movingRef.current = false;
     shotCountRef.current = 0;
+    currentPlayerRef.current = 1;
+    assignmentsRef.current = createInitialAssignments();
+    winnerRef.current = null;
     setupWorld(engine, ballsRef.current, bodiesRef.current);
     aimRef.current = { active: false, pointer: HEAD_SPOT };
-    setViewState(initialViewState);
+    setViewState(createInitialViewState());
   }, []);
+
+  const finishShot = useCallback(() => {
+    const result = evaluateShot({
+      currentPlayer: currentPlayerRef.current,
+      assignments: assignmentsRef.current,
+      pocketedBefore: pocketedBeforeShotRef.current,
+      newlyPocketed: newlyPocketedRef.current,
+      scratch: scratchThisShotRef.current,
+      firstContact: firstContactRef.current,
+    });
+
+    shotInProgressRef.current = false;
+    scratchThisShotRef.current = false;
+    firstContactRef.current = null;
+    newlyPocketedRef.current = [];
+    pocketedBeforeShotRef.current = [];
+    assignmentsRef.current = result.assignments;
+    currentPlayerRef.current = result.currentPlayer;
+    winnerRef.current = result.winner;
+
+    syncView({
+      currentPlayer: result.currentPlayer,
+      assignments: result.assignments,
+      winner: result.winner,
+      moving: false,
+      status: result.message,
+    });
+  }, [syncView]);
 
   useEffect(() => {
     const engine = Engine.create();
@@ -82,6 +147,10 @@ export function BilliardsPage() {
     engine.gravity.y = 0;
     engineRef.current = engine;
     setupWorld(engine, ballsRef.current, bodiesRef.current);
+    const handleCollisionStart = (event: Matter.IEventCollision<Matter.Engine>) => {
+      trackFirstCueContact(event, ballsRef.current, firstContactRef, shotInProgressRef);
+    };
+    Events.on(engine, "collisionStart", handleCollisionStart);
 
     let lastTime = performance.now();
 
@@ -90,17 +159,33 @@ export function BilliardsPage() {
       lastTime = time;
       Engine.update(engine, delta);
       dampSlowBalls(bodiesRef.current);
-      detectPocketedBalls(engine, ballsRef.current, bodiesRef.current, pocketedRef.current, syncView);
-      maybeRespawnCueBall(engine, ballsRef.current, bodiesRef.current, scratchPendingRef, movingRef, syncView);
+      detectPocketedBalls(
+        engine,
+        ballsRef.current,
+        bodiesRef.current,
+        pocketedRef.current,
+        newlyPocketedRef.current,
+        scratchThisShotRef,
+        syncView,
+      );
       const moving = !allBallsStopped(bodiesRef.current);
 
       if (moving !== movingRef.current) {
         movingRef.current = moving;
-        syncView({
-          moving,
-          status: moving ? "Balls are rolling." : "Table settled. Line up the next shot.",
-        });
+
+        if (moving) {
+          syncView({
+            moving,
+            status: "Balls are rolling.",
+          });
+        }
       }
+
+      if (!moving && shotInProgressRef.current) {
+        finishShot();
+      }
+
+      maybeRespawnCueBall(engine, ballsRef.current, bodiesRef.current, scratchPendingRef, movingRef, syncView);
 
       drawTable(canvasRef.current, ballsRef.current, bodiesRef.current, pocketedRef.current, aimRef.current);
       animationFrameRef.current = requestAnimationFrame(tick);
@@ -113,16 +198,29 @@ export function BilliardsPage() {
         cancelAnimationFrame(animationFrameRef.current);
       }
 
+      Events.off(engine, "collisionStart", handleCollisionStart);
       Composite.clear(engine.world, false);
       Engine.clear(engine);
       engineRef.current = null;
     };
-  }, [syncView]);
+  }, [finishShot, syncView]);
 
-  const updateAimFromEvent = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const updateAimFromEvent = (event: PointerEvent<HTMLCanvasElement>) => {
     const cueBody = bodiesRef.current.get("cue");
 
-    if (!cueBody || movingRef.current) {
+    if (!cueBody || movingRef.current || winnerRef.current) {
       return;
     }
 
@@ -132,12 +230,12 @@ export function BilliardsPage() {
     syncView({ aimingPower: Math.round(power * 100), status: "Release to shoot." });
   };
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     updateAimFromEvent(event);
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
     if (!aimRef.current.active) {
       return;
     }
@@ -145,7 +243,7 @@ export function BilliardsPage() {
     updateAimFromEvent(event);
   };
 
-  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const handlePointerUp = (event: PointerEvent<HTMLCanvasElement>) => {
     event.currentTarget.releasePointerCapture(event.pointerId);
     const cueBody = bodiesRef.current.get("cue");
     const aim = aimRef.current;
@@ -164,10 +262,15 @@ export function BilliardsPage() {
       return;
     }
 
+    shotInProgressRef.current = true;
+    scratchThisShotRef.current = false;
+    firstContactRef.current = null;
+    newlyPocketedRef.current = [];
+    pocketedBeforeShotRef.current = [...pocketedRef.current];
     shotCountRef.current += 1;
     Body.setVelocity(cueBody, {
-      x: shot.direction.x * shot.power * 26,
-      y: shot.direction.y * shot.power * 26,
+      x: shot.direction.x * shot.power * SHOT_SPEED_MULTIPLIER,
+      y: shot.direction.y * shot.power * SHOT_SPEED_MULTIPLIER,
     });
     syncView({
       shotCount: shotCountRef.current,
@@ -177,11 +280,32 @@ export function BilliardsPage() {
     });
   };
 
-  const summary = getPracticeSummary(
-    pocketedRef.current
-      .map((pocketed) => ballsRef.current.find((ball) => ball.id === pocketed.id))
-      .filter((ball): ball is BallDefinition => Boolean(ball)),
+  const rulesSummary = getRulesSummary(
+    viewState.currentPlayer,
+    viewState.assignments,
+    viewState.pocketed,
   );
+  const currentGroupLabel = getGroupLabel(viewState.assignments[viewState.currentPlayer]);
+
+  const toggleFullscreen = async () => {
+    const shell = tableShellRef.current;
+
+    if (!shell) {
+      return;
+    }
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await shell.requestFullscreen();
+
+    const orientation = window.screen.orientation as ScreenOrientation & {
+      lock?: (orientation: "landscape") => Promise<void>;
+    };
+    await orientation.lock?.("landscape").catch(() => undefined);
+  };
 
   return (
     <section className="billiards-view" aria-labelledby="billiards-title">
@@ -193,19 +317,35 @@ export function BilliardsPage() {
           </Link>
           <h1 id="billiards-title">Buffalo Billiards</h1>
         </div>
-        <div className="table-stats billiards-stats" aria-label="Practice table stats">
-          <Stat label="Shots" value={viewState.shotCount} />
-          <Stat label="Pocketed" value={viewState.pocketed.length} />
+        <div className="table-stats billiards-stats" aria-label="8-ball table stats">
+          <Stat
+            label="Player"
+            value={viewState.winner ? `P${viewState.winner} wins` : `P${viewState.currentPlayer}`}
+          />
+          <Stat label="Group" value={currentGroupLabel} />
           <Stat label="Power" value={`${viewState.aimingPower}%`} />
         </div>
       </div>
 
       <div className="billiards-layout">
-        <div className="pool-table-shell">
+        <div ref={tableShellRef} className="pool-table-shell">
+          <div className="pool-table-hud" aria-live="polite">
+            <span>{viewState.winner ? `Player ${viewState.winner} wins` : `Player ${viewState.currentPlayer}`}</span>
+            <strong>{currentGroupLabel}</strong>
+          </div>
+          <button
+            className="pool-fullscreen-button"
+            type="button"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Play billiards fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
+            <span>{isFullscreen ? "Exit" : "Fullscreen"}</span>
+          </button>
           <canvas
             ref={canvasRef}
             className="pool-canvas"
-            aria-label="Practice 8-ball pool table"
+            aria-label="Local two-player 8-ball pool table"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -218,25 +358,54 @@ export function BilliardsPage() {
 
         <aside className="billiards-panel" aria-label="Billiards controls">
           <div>
-            <p className="eyebrow">Practice table</p>
-            <h2>One-player 8-ball</h2>
+            <p className="eyebrow">Local table</p>
+            <h2>Two-player 8-ball</h2>
             <p>{viewState.status}</p>
           </div>
           <div className="billiards-readout">
             <Target size={18} aria-hidden="true" />
-            <span>{summary}</span>
+            <span>{rulesSummary}</span>
+          </div>
+          <div className="billiards-scoreboard" aria-label="Player groups">
+            <PlayerBadge
+              player={1}
+              group={viewState.assignments[1]}
+              active={viewState.currentPlayer === 1 && !viewState.winner}
+            />
+            <PlayerBadge
+              player={2}
+              group={viewState.assignments[2]}
+              active={viewState.currentPlayer === 2 && !viewState.winner}
+            />
           </div>
           <button className="button button-primary" type="button" onClick={resetTable}>
             <RotateCcw size={18} aria-hidden="true" />
             Reset rack
           </button>
           <p className="table-note">
-            Pull back from the cue ball, then release. Scratches automatically return the cue ball
-            to the head spot after the table settles.
+            Pull back from the cue ball, then release. Pocket your group, then legally sink the 8.
+            Scratches return the cue ball to the head spot.
           </p>
         </aside>
       </div>
     </section>
+  );
+}
+
+function PlayerBadge({
+  player,
+  group,
+  active,
+}: {
+  player: PlayerId;
+  group: PlayerAssignments[PlayerId];
+  active: boolean;
+}) {
+  return (
+    <div className={`player-badge ${active ? "player-badge--active" : ""}`}>
+      <span>Player {player}</span>
+      <strong>{getGroupLabel(group)}</strong>
+    </div>
   );
 }
 
@@ -301,6 +470,8 @@ function detectPocketedBalls(
   balls: BallDefinition[],
   bodies: Map<string, Matter.Body>,
   pocketed: PocketedBall[],
+  newlyPocketed: PocketedBall[],
+  scratchThisShot: MutableRefObject<boolean>,
   syncView: (updates: Partial<BilliardsViewState>) => void,
 ) {
   bodies.forEach((body, id) => {
@@ -320,16 +491,19 @@ function detectPocketedBalls(
     bodies.delete(id);
 
     if (ball.kind === "cue") {
+      scratchThisShot.current = true;
       syncView({ status: "Scratch. Cue ball will return after the table settles." });
       return;
     }
 
     if (!pocketed.some((candidate) => candidate.id === id)) {
-      pocketed.push({
+      const pocketedBall = {
         id,
         number: ball.number,
         kind: ball.kind,
-      });
+      };
+      pocketed.push(pocketedBall);
+      newlyPocketed.push(pocketedBall);
       syncView({
         pocketed: [...pocketed],
         status:
@@ -374,6 +548,36 @@ function maybeRespawnCueBall(
     scratchPending.current = false;
     syncView({ status: "Cue ball reset. Line up the next shot." });
   }
+}
+
+function trackFirstCueContact(
+  event: Matter.IEventCollision<Matter.Engine>,
+  balls: BallDefinition[],
+  firstContact: MutableRefObject<BallKind | null>,
+  shotInProgress: MutableRefObject<boolean>,
+) {
+  if (!shotInProgress.current || firstContact.current) {
+    return;
+  }
+
+  event.pairs.some((pair) => {
+    const cueBody =
+      pair.bodyA.label === "cue" ? pair.bodyA : pair.bodyB.label === "cue" ? pair.bodyB : null;
+
+    if (!cueBody) {
+      return false;
+    }
+
+    const otherBody = cueBody === pair.bodyA ? pair.bodyB : pair.bodyA;
+    const ball = balls.find((candidate) => candidate.id === otherBody.label);
+
+    if (!ball || ball.kind === "cue") {
+      return false;
+    }
+
+    firstContact.current = ball.kind;
+    return true;
+  });
 }
 
 function allBallsStopped(bodies: Map<string, Matter.Body>): boolean {

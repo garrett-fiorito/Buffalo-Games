@@ -1,4 +1,15 @@
-import type { BallDefinition, BallKind, Pocket, Vector2 } from "./billiardsTypes";
+import type {
+  BallDefinition,
+  BallGroup,
+  BallKind,
+  PlayerAssignments,
+  PlayerId,
+  Pocket,
+  PocketedBall,
+  ShotEvaluation,
+  ShotEvaluationInput,
+  Vector2,
+} from "./billiardsTypes";
 
 export const TABLE_WIDTH = 1000;
 export const TABLE_HEIGHT = 560;
@@ -7,8 +18,13 @@ export const POCKET_RADIUS = 28;
 export const HEAD_SPOT: Vector2 = { x: 260, y: TABLE_HEIGHT / 2 };
 export const FOOT_SPOT: Vector2 = { x: 695, y: TABLE_HEIGHT / 2 };
 export const STOP_SPEED = 0.12;
+export const SHOT_SPEED_MULTIPLIER = 29.5;
 
 const rackRows = [[1], [9, 2], [3, 8, 10], [11, 4, 12, 5], [6, 13, 7, 14, 15]];
+const groupBalls: Record<BallGroup, number[]> = {
+  solid: [1, 2, 3, 4, 5, 6, 7],
+  stripe: [9, 10, 11, 12, 13, 14, 15],
+};
 
 const ballColors: Record<number, string> = {
   1: "#f4c542",
@@ -76,6 +92,142 @@ export function getBallKind(number: number): BallKind {
   return number < 8 ? "solid" : "stripe";
 }
 
+export function createInitialAssignments(): PlayerAssignments {
+  return {
+    1: null,
+    2: null,
+  };
+}
+
+export function getOpponent(player: PlayerId): PlayerId {
+  return player === 1 ? 2 : 1;
+}
+
+export function getGroupLabel(group: BallGroup | null): string {
+  if (group === "solid") {
+    return "Solids";
+  }
+
+  if (group === "stripe") {
+    return "Stripes";
+  }
+
+  return "Open";
+}
+
+export function getBallGroup(kind: BallKind): BallGroup | null {
+  if (kind === "solid" || kind === "stripe") {
+    return kind;
+  }
+
+  return null;
+}
+
+export function isGroupCleared(group: BallGroup, pocketed: PocketedBall[]): boolean {
+  return groupBalls[group].every((number) => pocketed.some((ball) => ball.number === number));
+}
+
+export function evaluateShot(input: ShotEvaluationInput): ShotEvaluation {
+  const opponent = getOpponent(input.currentPlayer);
+  const pocketedAfter = [...input.pocketedBefore, ...input.newlyPocketed];
+  const assignments = maybeAssignGroups(
+    input.currentPlayer,
+    input.assignments,
+    input.newlyPocketed,
+  );
+  const assignedGroup = assignments[input.currentPlayer];
+  const currentAssignment = input.assignments[input.currentPlayer];
+  const clearedBefore = currentAssignment
+    ? isGroupCleared(currentAssignment, input.pocketedBefore)
+    : false;
+  const clearedAfter = assignedGroup ? isGroupCleared(assignedGroup, pocketedAfter) : false;
+  const eightPocketed = input.newlyPocketed.some((ball) => ball.kind === "eight");
+  const firstContactFoul = isFirstContactFoul(input.firstContact, assignedGroup, clearedBefore);
+  const foul = input.scratch || firstContactFoul;
+
+  if (eightPocketed) {
+    if (!foul && clearedAfter) {
+      return {
+        assignments,
+        currentPlayer: input.currentPlayer,
+        winner: input.currentPlayer,
+        playerContinues: false,
+        foul: false,
+        message: `Player ${input.currentPlayer} sinks the 8 ball and wins.`,
+      };
+    }
+
+    return {
+      assignments,
+      currentPlayer: opponent,
+      winner: opponent,
+      playerContinues: false,
+      foul: true,
+      message: `Player ${input.currentPlayer} pocketed the 8 ball early. Player ${opponent} wins.`,
+    };
+  }
+
+  if (foul) {
+    return {
+      assignments,
+      currentPlayer: opponent,
+      winner: null,
+      playerContinues: false,
+      foul: true,
+      message: getFoulMessage(input.currentPlayer, opponent, input.scratch, firstContactFoul),
+    };
+  }
+
+  const pocketedOwnBall = assignedGroup
+    ? input.newlyPocketed.some((ball) => ball.kind === assignedGroup)
+    : input.newlyPocketed.some((ball) => getBallGroup(ball.kind) !== null);
+
+  if (pocketedOwnBall) {
+    return {
+      assignments,
+      currentPlayer: input.currentPlayer,
+      winner: null,
+      playerContinues: true,
+      foul: false,
+      message:
+        input.assignments[input.currentPlayer] === null && assignments[input.currentPlayer] !== null
+          ? `Player ${input.currentPlayer} is ${getGroupLabel(assignments[input.currentPlayer])}. Keep shooting.`
+          : `Player ${input.currentPlayer} keeps shooting.`,
+    };
+  }
+
+  return {
+    assignments,
+    currentPlayer: opponent,
+    winner: null,
+    playerContinues: false,
+    foul: false,
+    message: `No ball from Player ${input.currentPlayer}'s group dropped. Player ${opponent}'s turn.`,
+  };
+}
+
+export function getRulesSummary(
+  currentPlayer: PlayerId,
+  assignments: PlayerAssignments,
+  pocketed: PocketedBall[],
+): string {
+  const playerGroup = assignments[currentPlayer];
+
+  if (!playerGroup) {
+    return "Open table. Pocket a solid or stripe to claim a group.";
+  }
+
+  const remaining = groupBalls[playerGroup].filter(
+    (number) => !pocketed.some((ball) => ball.number === number),
+  ).length;
+
+  if (remaining === 0) {
+    return `Player ${currentPlayer} is on the 8 ball.`;
+  }
+
+  return `Player ${currentPlayer}: ${getGroupLabel(playerGroup)}. ${remaining} left before the 8.`;
+}
+
 export function distance(a: Vector2, b: Vector2): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -88,7 +240,7 @@ export function isVelocityStopped(velocity: Vector2, threshold = STOP_SPEED): bo
   return Math.hypot(velocity.x, velocity.y) <= threshold;
 }
 
-export function getPracticeSummary(pocketed: BallDefinition[]): string {
+export function getPracticeSummary(pocketed: Array<Pick<BallDefinition, "kind">>): string {
   const objectBalls = pocketed.filter((ball) => ball.kind !== "cue");
 
   if (objectBalls.length === 0) {
@@ -102,4 +254,59 @@ export function getPracticeSummary(pocketed: BallDefinition[]): string {
   return `${objectBalls.length} pocketed: ${solids} solid${solids === 1 ? "" : "s"}, ${stripes} stripe${
     stripes === 1 ? "" : "s"
   }${eight ? ", 8 ball down" : ""}.`;
+}
+
+function maybeAssignGroups(
+  currentPlayer: PlayerId,
+  assignments: PlayerAssignments,
+  newlyPocketed: PocketedBall[],
+): PlayerAssignments {
+  if (assignments[currentPlayer]) {
+    return assignments;
+  }
+
+  const firstGroupBall = newlyPocketed.find((ball) => getBallGroup(ball.kind) !== null);
+  const group = firstGroupBall ? getBallGroup(firstGroupBall.kind) : null;
+
+  if (!group) {
+    return assignments;
+  }
+
+  const nextAssignments: PlayerAssignments = { ...assignments };
+  nextAssignments[currentPlayer] = group;
+  nextAssignments[getOpponent(currentPlayer)] = group === "solid" ? "stripe" : "solid";
+  return nextAssignments;
+}
+
+function isFirstContactFoul(
+  firstContact: BallKind | null,
+  assignedGroup: BallGroup | null,
+  clearedBefore: boolean,
+): boolean {
+  if (!firstContact) {
+    return true;
+  }
+
+  if (!assignedGroup) {
+    return firstContact === "eight";
+  }
+
+  return clearedBefore ? firstContact !== "eight" : firstContact !== assignedGroup;
+}
+
+function getFoulMessage(
+  currentPlayer: PlayerId,
+  opponent: PlayerId,
+  scratch: boolean,
+  firstContactFoul: boolean,
+): string {
+  if (scratch && firstContactFoul) {
+    return `Foul on Player ${currentPlayer}: scratch and illegal first contact. Player ${opponent}'s turn.`;
+  }
+
+  if (scratch) {
+    return `Scratch on Player ${currentPlayer}. Player ${opponent}'s turn.`;
+  }
+
+  return `Foul on Player ${currentPlayer}: illegal first contact. Player ${opponent}'s turn.`;
 }

@@ -513,6 +513,54 @@ h1 {
   box-shadow: var(--shadow-soft);
 }
 
+.pool-fullscreen-button {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.72);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.pool-table-hud {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 12px;
+  display: inline-grid;
+  gap: 2px;
+  min-width: 118px;
+  padding: 8px 10px;
+  border: 1px solid rgba(53, 255, 132, 0.26);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.68);
+}
+
+.pool-table-hud span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pool-table-hud strong {
+  font-size: 0.96rem;
+}
+
+.pool-fullscreen-button:hover {
+  border-color: rgba(53, 255, 132, 0.72);
+}
+
 .pool-canvas {
   display: block;
   width: 100%;
@@ -520,6 +568,20 @@ h1 {
   min-height: 520px;
   touch-action: none;
   cursor: crosshair;
+}
+
+.pool-table-shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #050505;
+}
+
+.pool-table-shell:fullscreen .pool-canvas {
+  height: 100vh;
+  min-height: 100vh;
 }
 
 .billiards-panel {
@@ -560,6 +622,38 @@ h1 {
 .billiards-readout svg {
   min-width: 18px;
   color: #35ff84;
+}
+
+.billiards-scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.player-badge {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: rgba(5, 5, 5, 0.26);
+}
+
+.player-badge span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.player-badge strong {
+  font-size: 1rem;
+}
+
+.player-badge--active {
+  border-color: rgba(53, 255, 132, 0.55);
+  background: rgba(53, 255, 132, 0.08);
+  box-shadow: inset 0 0 22px rgba(53, 255, 132, 0.08);
 }
 
 .blackjack-table::before {
@@ -900,5 +994,13 @@ input[type="range"] {
   .action-row .button,
   .action-row .icon-button {
     width: 100%;
+  }
+
+  .pool-fullscreen-button span {
+    display: none;
+  }
+
+  .pool-table-hud {
+    min-width: 98px;
   }
 }

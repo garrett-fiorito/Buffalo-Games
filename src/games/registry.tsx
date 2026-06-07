@@ -33,9 +33,9 @@ export const games: GameDefinition[] = [
     name: "Billiards",
     path: "/games/billiards",
     description:
-      "Line up shots on a practice 8-ball table with responsive cue control, pockets, rails, and full ball physics.",
-    playTime: "Practice table",
-    status: "New",
+      "Play local two-player 8-ball with group assignment, turn tracking, scratches, pockets, rails, and full ball physics.",
+    playTime: "Local 2P",
+    status: "Live",
     art: (
       <div className="billiards-card-art">
         <span className="pool-ball pool-ball--cue" />

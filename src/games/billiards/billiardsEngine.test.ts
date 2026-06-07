@@ -2,12 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   BALL_RADIUS,
   FOOT_SPOT,
+  createInitialAssignments,
   createPracticeRack,
+  evaluateShot,
   findContainingPocket,
   getBallKind,
+  getGroupLabel,
+  getOpponent,
   getPracticeSummary,
+  getRulesSummary,
   isVelocityStopped,
 } from "./billiardsEngine";
+import type { PocketedBall } from "./billiardsTypes";
 
 describe("billiards setup", () => {
   it("creates a cue ball plus a complete 15-ball rack", () => {
@@ -49,4 +55,88 @@ describe("billiards setup", () => {
 
     expect(getPracticeSummary(pocketed)).toBe("3 pocketed: 1 solid, 1 stripe, 8 ball down.");
   });
+
+  it("assigns groups when the first player pockets a solid or stripe", () => {
+    const result = evaluateShot({
+      currentPlayer: 1,
+      assignments: createInitialAssignments(),
+      pocketedBefore: [],
+      newlyPocketed: [pocketed(3, "solid")],
+      scratch: false,
+      firstContact: "solid",
+    });
+
+    expect(result.assignments).toEqual({ 1: "solid", 2: "stripe" });
+    expect(result.currentPlayer).toBe(1);
+    expect(result.playerContinues).toBe(true);
+  });
+
+  it("switches turns when no legal group ball drops", () => {
+    const result = evaluateShot({
+      currentPlayer: 1,
+      assignments: { 1: "solid", 2: "stripe" },
+      pocketedBefore: [],
+      newlyPocketed: [],
+      scratch: false,
+      firstContact: "solid",
+    });
+
+    expect(result.currentPlayer).toBe(2);
+    expect(result.playerContinues).toBe(false);
+  });
+
+  it("switches turns on scratch", () => {
+    const result = evaluateShot({
+      currentPlayer: 2,
+      assignments: { 1: "solid", 2: "stripe" },
+      pocketedBefore: [],
+      newlyPocketed: [pocketed(12, "stripe")],
+      scratch: true,
+      firstContact: "stripe",
+    });
+
+    expect(result.currentPlayer).toBe(1);
+    expect(result.foul).toBe(true);
+    expect(result.playerContinues).toBe(false);
+  });
+
+  it("awards the opponent when the 8 ball drops early", () => {
+    const result = evaluateShot({
+      currentPlayer: 1,
+      assignments: { 1: "solid", 2: "stripe" },
+      pocketedBefore: [pocketed(1, "solid"), pocketed(2, "solid")],
+      newlyPocketed: [pocketed(8, "eight")],
+      scratch: false,
+      firstContact: "eight",
+    });
+
+    expect(result.winner).toBe(2);
+  });
+
+  it("wins when a player pockets the 8 after clearing their group", () => {
+    const result = evaluateShot({
+      currentPlayer: 1,
+      assignments: { 1: "solid", 2: "stripe" },
+      pocketedBefore: [1, 2, 3, 4, 5, 6, 7].map((number) => pocketed(number, "solid")),
+      newlyPocketed: [pocketed(8, "eight")],
+      scratch: false,
+      firstContact: "eight",
+    });
+
+    expect(result.winner).toBe(1);
+  });
+
+  it("formats player and rules labels", () => {
+    expect(getOpponent(1)).toBe(2);
+    expect(getGroupLabel("solid")).toBe("Solids");
+    expect(getRulesSummary(1, createInitialAssignments(), [])).toContain("Open table");
+  });
 });
+
+function pocketed(number: number, kind: PocketedBall["kind"]): PocketedBall {
+  return {
+    id: `ball-${number}`,
+    number,
+    kind,
+  };
+}
