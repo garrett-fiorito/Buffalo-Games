@@ -18,23 +18,24 @@ npm test
 npm run build
 ```
 
-## Cloudflare Pages
+## Cloudflare Workers
 
 Recommended project settings:
 
-- Framework preset: React / Vite
 - Build command: `npm run build`
-- Build output directory: `dist`
+- Deploy command: `npx wrangler deploy`
 - Root directory: leave blank unless this app is moved into a monorepo subfolder
 
-The `public/_redirects` file is included so direct SPA links like `/games/blackjack` resolve to the app.
+The `wrangler.toml` file points Cloudflare at the built `dist` folder and uses
+`not_found_handling = "single-page-application"` so direct SPA links like
+`/games/blackjack` resolve to the app.
 
 ## Deploy
 
 1. Push this repository to GitHub or another Git provider connected to Cloudflare.
 2. In Cloudflare, go to Workers & Pages.
-3. Choose Create application > Pages > Import an existing Git repository.
+3. Choose Create application > Worker > Import an existing Git repository.
 4. Select this repository.
 5. Use the build settings above, then choose Save and Deploy.
 
-Cloudflare will deploy the app to a `*.pages.dev` URL and rebuild it whenever you push new commits.
+Cloudflare will deploy the app to a `*.workers.dev` URL and rebuild it whenever you push new commits.
