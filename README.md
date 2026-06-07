@@ -2,6 +2,11 @@
 
 A dark buffalo-themed browser game site launching with Blackjack and structured for more games later.
 
+Current games:
+
+- Blackjack: `/games/blackjack`
+- Billiards practice: `/games/billiards`
+
 ## Local Development
 
 ```bash

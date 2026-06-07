@@ -150,7 +150,8 @@ a {
 }
 
 .lobby-view,
-.blackjack-view {
+.blackjack-view,
+.billiards-view {
   display: grid;
   gap: 28px;
 }
@@ -256,6 +257,70 @@ h1 {
   top: 18px;
   color: var(--color-red);
   transform: rotate(-10deg);
+}
+
+.billiards-card-art {
+  position: absolute;
+  inset: 24px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(53, 255, 132, 0.16), transparent 46%),
+    linear-gradient(145deg, rgba(13, 95, 61, 0.72), rgba(5, 5, 5, 0.4));
+}
+
+.pool-ball {
+  position: absolute;
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1px solid rgba(246, 234, 208, 0.24);
+  border-radius: 50%;
+  color: #111;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85), transparent 18%),
+    #f7f2df;
+  font-weight: 950;
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.38);
+}
+
+.pool-ball--cue {
+  left: 16%;
+  top: 52%;
+}
+
+.pool-ball--eight {
+  color: #f7f2df;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45), transparent 18%),
+    #101010;
+}
+
+.pool-ball--solid {
+  right: 18%;
+  top: 20%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.65), transparent 18%),
+    #c44135;
+}
+
+.pool-ball--stripe {
+  right: 12%;
+  bottom: 14%;
+  background:
+    linear-gradient(180deg, #f7f2df 0 28%, #6d42b8 28% 72%, #f7f2df 72%),
+    #f7f2df;
+}
+
+.pool-cue {
+  position: absolute;
+  width: min(280px, 82%);
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f6ead0, #a96f39 36%, #3a2112);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.32);
+  transform: rotate(-25deg);
 }
 
 .game-card__body {
@@ -376,6 +441,10 @@ h1 {
   gap: 10px;
 }
 
+.billiards-stats {
+  grid-template-columns: repeat(3, minmax(94px, 1fr));
+}
+
 .stat-pill {
   gap: 9px;
   min-height: 50px;
@@ -423,6 +492,74 @@ h1 {
   box-shadow:
     inset 0 0 0 10px rgba(5, 5, 5, 0.18),
     var(--shadow-soft);
+}
+
+.billiards-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.32fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.pool-table-shell {
+  position: relative;
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(5, 5, 5, 0.84), rgba(14, 39, 29, 0.56)),
+    #050505;
+  box-shadow: var(--shadow-soft);
+}
+
+.pool-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.billiards-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-panel);
+}
+
+.billiards-panel h2 {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0;
+}
+
+.billiards-panel p {
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.billiards-readout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid rgba(53, 255, 132, 0.22);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(53, 255, 132, 0.06);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.billiards-readout svg {
+  min-width: 18px;
+  color: #35ff84;
 }
 
 .blackjack-table::before {
@@ -649,12 +786,17 @@ input[type="range"] {
 
 @media (max-width: 980px) {
   .table-hero,
-  .control-panel {
+  .control-panel,
+  .billiards-layout {
     grid-template-columns: 1fr;
   }
 
   .table-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .billiards-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .control-panel {
@@ -701,6 +843,10 @@ input[type="range"] {
     padding: 20px 14px;
   }
 
+  .pool-canvas {
+    min-height: 360px;
+  }
+
   .cards-row {
     min-height: 126px;
     gap: 8px;
@@ -735,6 +881,10 @@ input[type="range"] {
   }
 
   .table-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .billiards-stats {
     grid-template-columns: 1fr;
   }
 

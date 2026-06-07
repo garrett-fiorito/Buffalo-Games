@@ -1,4 +1,4 @@
-import { Landmark, Sparkles } from "lucide-react";
+import { CircleDot, Landmark, Sparkles } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
 
@@ -29,6 +29,13 @@ export function SiteLayout({ children }: SiteLayoutProps) {
           >
             <Sparkles size={17} aria-hidden="true" />
             Blackjack
+          </NavLink>
+          <NavLink
+            to="/games/billiards"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <CircleDot size={17} aria-hidden="true" />
+            Billiards
           </NavLink>
         </nav>
       </header>
