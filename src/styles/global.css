@@ -1060,3 +1060,59 @@ input[type="range"] {
     padding: 6px 8px;
   }
 }
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body.billiards-game-active {
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background: #050505;
+  }
+
+  body.billiards-game-active .site-shell {
+    width: 100dvw;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  body.billiards-game-active .site-header,
+  body.billiards-game-active .billiards-hero,
+  body.billiards-game-active .billiards-panel {
+    display: none;
+  }
+
+  body.billiards-game-active main,
+  body.billiards-game-active .billiards-view,
+  body.billiards-game-active .billiards-layout {
+    display: block;
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body.billiards-game-active .pool-table-shell {
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  body.billiards-game-active .pool-canvas {
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  body.billiards-game-active .pool-table-hud {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    min-width: 92px;
+    padding: 6px 8px;
+  }
+}

@@ -46,6 +46,12 @@ type AimState = {
   pointer: Vector2;
 };
 
+type ObjectBallPrediction = {
+  ballPosition: Vector2;
+  direction: Vector2;
+  distance: number;
+};
+
 function createInitialViewState(): BilliardsViewState {
   return {
     pocketed: [],
@@ -657,7 +663,7 @@ function drawTable(
     const cue = bodies.get("cue");
 
     if (cue) {
-      drawAimGuide(context, cue.position, aim.pointer, toScreen, scale);
+      drawAimGuide(context, cue.position, aim.pointer, bodies, toScreen, scale);
     }
   }
 
@@ -736,6 +742,7 @@ function drawAimGuide(
   context: CanvasRenderingContext2D,
   cuePosition: Vector2,
   pointer: Vector2,
+  bodies: Map<string, Matter.Body>,
   toScreen: (point: Vector2) => Vector2,
   scale: number,
 ) {
@@ -753,6 +760,28 @@ function drawAimGuide(
   context.moveTo(cue.x, cue.y);
   context.lineTo(target.x, target.y);
   context.stroke();
+
+  const targetPrediction = getObjectBallPrediction(cuePosition, shot.direction, bodies);
+
+  if (targetPrediction) {
+    const objectBall = toScreen(targetPrediction.ballPosition);
+    const objectTarget = toScreen({
+      x: targetPrediction.ballPosition.x + targetPrediction.direction.x * 230,
+      y: targetPrediction.ballPosition.y + targetPrediction.direction.y * 230,
+    });
+
+    context.strokeStyle = "rgba(240, 198, 106, 0.95)";
+    context.lineWidth = 3 * scale;
+    context.beginPath();
+    context.moveTo(objectBall.x, objectBall.y);
+    context.lineTo(objectTarget.x, objectTarget.y);
+    context.stroke();
+
+    context.beginPath();
+    context.fillStyle = "rgba(240, 198, 106, 0.95)";
+    context.arc(objectBall.x, objectBall.y, 4 * scale, 0, Math.PI * 2);
+    context.fill();
+  }
 
   context.strokeStyle = "rgba(246, 234, 208, 0.34)";
   context.lineWidth = 2 * scale;
@@ -877,4 +906,89 @@ function getShotVector(cue: Vector2, pointer: Vector2): { direction: Vector2; po
 
 function getAimPower(cue: Vector2, pointer: Vector2): number {
   return Math.min(1, Math.hypot(cue.x - pointer.x, cue.y - pointer.y) / 180);
+}
+
+function getObjectBallPrediction(
+  cuePosition: Vector2,
+  shotDirection: Vector2,
+  bodies: Map<string, Matter.Body>,
+): { ballPosition: Vector2; direction: Vector2 } | null {
+  if (shotDirection.x === 0 && shotDirection.y === 0) {
+    return null;
+  }
+
+  const collisionDistance = BALL_RADIUS * 2;
+  let bestPrediction: ObjectBallPrediction | null = null;
+
+  bodies.forEach((body, id) => {
+    if (id === "cue") {
+      return;
+    }
+
+    const toBall = {
+      x: body.position.x - cuePosition.x,
+      y: body.position.y - cuePosition.y,
+    };
+    const projection = toBall.x * shotDirection.x + toBall.y * shotDirection.y;
+
+    if (projection <= 0) {
+      return;
+    }
+
+    const closestPoint = {
+      x: cuePosition.x + shotDirection.x * projection,
+      y: cuePosition.y + shotDirection.y * projection,
+    };
+    const missDistance = Math.hypot(body.position.x - closestPoint.x, body.position.y - closestPoint.y);
+
+    if (missDistance > collisionDistance) {
+      return;
+    }
+
+    const impactDistance = projection - Math.sqrt(collisionDistance ** 2 - missDistance ** 2);
+    const cueImpactPosition = {
+      x: cuePosition.x + shotDirection.x * impactDistance,
+      y: cuePosition.y + shotDirection.y * impactDistance,
+    };
+    const objectDirection = normalize({
+      x: body.position.x - cueImpactPosition.x,
+      y: body.position.y - cueImpactPosition.y,
+    });
+
+    if (!objectDirection) {
+      return;
+    }
+
+    if (!bestPrediction || impactDistance < bestPrediction.distance) {
+      bestPrediction = {
+        ballPosition: body.position,
+        direction: objectDirection,
+        distance: impactDistance,
+      };
+    }
+  });
+
+  if (!bestPrediction) {
+    return null;
+  }
+
+  const prediction = bestPrediction as ObjectBallPrediction;
+
+  return {
+    ballPosition: prediction.ballPosition,
+    direction: prediction.direction,
+  };
+}
+
+function normalize(vector: Vector2): Vector2 | null {
+  const length = Math.hypot(vector.x, vector.y);
+
+  if (length === 0) {
+    return null;
+  }
+
+  return {
+    x: vector.x / length,
+    y: vector.y / length,
+  };
 }
