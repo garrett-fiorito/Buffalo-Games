@@ -17,10 +17,27 @@ export const BALL_RADIUS = 12;
 export const POCKET_RADIUS = 28;
 export const HEAD_SPOT: Vector2 = { x: 260, y: TABLE_HEIGHT / 2 };
 export const FOOT_SPOT: Vector2 = { x: 695, y: TABLE_HEIGHT / 2 };
-export const STOP_SPEED = 0.12;
-export const SHOT_SPEED_MULTIPLIER = 29.5;
+export const STOP_SPEED = 0.08;
+export const SHOT_SPEED_MULTIPLIER = 31;
 
 const rackRows = [[1], [9, 2], [3, 8, 10], [11, 4, 12, 5], [6, 13, 7, 14, 15]];
+const rackLooseness: Record<number, Vector2> = {
+  1: { x: 0, y: -0.32 },
+  2: { x: 0.18, y: 0.22 },
+  3: { x: -0.2, y: -0.18 },
+  4: { x: 0.24, y: 0.14 },
+  5: { x: -0.16, y: -0.28 },
+  6: { x: 0.22, y: 0.24 },
+  7: { x: -0.18, y: 0.1 },
+  8: { x: 0.1, y: 0 },
+  9: { x: -0.14, y: -0.24 },
+  10: { x: 0.26, y: 0.18 },
+  11: { x: -0.24, y: 0.22 },
+  12: { x: 0.12, y: -0.16 },
+  13: { x: -0.12, y: 0.26 },
+  14: { x: 0.2, y: -0.12 },
+  15: { x: -0.26, y: 0.18 },
+};
 const groupBalls: Record<BallGroup, number[]> = {
   solid: [1, 2, 3, 4, 5, 6, 7],
   stripe: [9, 10, 11, 12, 13, 14, 15],
@@ -54,8 +71,8 @@ export const pockets: Pocket[] = [
 ];
 
 export function createPracticeRack(): BallDefinition[] {
-  const spacing = BALL_RADIUS * 2.12;
-  const rowStep = spacing * 0.88;
+  const spacing = BALL_RADIUS * 2.04;
+  const rowStep = spacing * 0.866;
   const balls: BallDefinition[] = [
     {
       id: "cue",
@@ -68,14 +85,15 @@ export function createPracticeRack(): BallDefinition[] {
 
   rackRows.forEach((row, rowIndex) => {
     row.forEach((number, ballIndex) => {
+      const looseness = rackLooseness[number];
       balls.push({
         id: `ball-${number}`,
         number,
         kind: getBallKind(number),
         color: ballColors[number],
         position: {
-          x: FOOT_SPOT.x + rowIndex * rowStep,
-          y: FOOT_SPOT.y + (ballIndex - (row.length - 1) / 2) * spacing,
+          x: FOOT_SPOT.x + rowIndex * rowStep + looseness.x,
+          y: FOOT_SPOT.y + (ballIndex - (row.length - 1) / 2) * spacing + looseness.y,
         },
       });
     });

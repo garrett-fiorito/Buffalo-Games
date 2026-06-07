@@ -142,9 +142,19 @@ export function BilliardsPage() {
   }, [syncView]);
 
   useEffect(() => {
+    document.body.classList.add("billiards-game-active");
+
+    return () => {
+      document.body.classList.remove("billiards-game-active");
+    };
+  }, []);
+
+  useEffect(() => {
     const engine = Engine.create();
     engine.gravity.x = 0;
     engine.gravity.y = 0;
+    engine.positionIterations = 10;
+    engine.velocityIterations = 12;
     engineRef.current = engine;
     setupWorld(engine, ballsRef.current, bodiesRef.current);
     const handleCollisionStart = (event: Matter.IEventCollision<Matter.Engine>) => {
@@ -384,7 +394,7 @@ export function BilliardsPage() {
           </button>
           <p className="table-note">
             Pull back from the cue ball, then release. Pocket your group, then legally sink the 8.
-            Scratches return the cue ball to the head spot.
+            Scratches return the cue ball to the head spot. On phones, rotate sideways for the full table view.
           </p>
         </aside>
       </div>
@@ -433,12 +443,12 @@ function setupWorld(
   const ballBodies = balls.map((ball) => {
     const body = Bodies.circle(ball.position.x, ball.position.y, BALL_RADIUS, {
       label: ball.id,
-      restitution: 0.96,
-      friction: 0.004,
+      restitution: 0.992,
+      friction: 0.001,
       frictionStatic: 0,
-      frictionAir: 0.018,
+      frictionAir: 0.009,
       density: 0.004,
-      slop: 0.02,
+      slop: 0.005,
     });
     bodies.set(ball.id, body);
     return body;
@@ -450,15 +460,15 @@ function setupWorld(
 function wallOptions(): Matter.IChamferableBodyDefinition {
   return {
     isStatic: true,
-    restitution: 0.92,
-    friction: 0.02,
+    restitution: 0.88,
+    friction: 0.012,
     label: "rail",
   };
 }
 
 function dampSlowBalls(bodies: Map<string, Matter.Body>) {
   bodies.forEach((body) => {
-    if (isVelocityStopped(body.velocity, 0.035)) {
+    if (isVelocityStopped(body.velocity, 0.022)) {
       Body.setVelocity(body, { x: 0, y: 0 });
       Body.setAngularVelocity(body, 0);
     }
@@ -536,12 +546,12 @@ function maybeRespawnCueBall(
     const spot = getOpenCueSpot(bodies);
     const cueBody = Bodies.circle(spot.x, spot.y, BALL_RADIUS, {
       label: "cue",
-      restitution: 0.96,
-      friction: 0.004,
+      restitution: 0.992,
+      friction: 0.001,
       frictionStatic: 0,
-      frictionAir: 0.018,
+      frictionAir: 0.009,
       density: 0.004,
-      slop: 0.02,
+      slop: 0.005,
     });
     bodies.set("cue", cueBody);
     Composite.add(engine.world, cueBody);

@@ -941,6 +941,10 @@ input[type="range"] {
     min-height: 360px;
   }
 
+  .pool-fullscreen-button {
+    display: none;
+  }
+
   .cards-row {
     min-height: 126px;
     gap: 8px;
@@ -1002,5 +1006,57 @@ input[type="range"] {
 
   .pool-table-hud {
     min-width: 98px;
+  }
+}
+
+@media (pointer: coarse) {
+  .pool-fullscreen-button {
+    display: none;
+  }
+}
+
+@media (max-width: 940px) and (orientation: landscape) {
+  body.billiards-game-active {
+    overflow: hidden;
+  }
+
+  body.billiards-game-active .site-shell {
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  body.billiards-game-active .site-header,
+  body.billiards-game-active .billiards-hero,
+  body.billiards-game-active .billiards-panel {
+    display: none;
+  }
+
+  body.billiards-game-active .billiards-view,
+  body.billiards-game-active .billiards-layout {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  body.billiards-game-active .pool-table-shell {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  body.billiards-game-active .pool-canvas {
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  body.billiards-game-active .pool-table-hud {
+    top: 8px;
+    left: 8px;
+    min-width: 92px;
+    padding: 6px 8px;
   }
 }

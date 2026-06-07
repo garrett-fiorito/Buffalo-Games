@@ -29,7 +29,15 @@ describe("billiards setup", () => {
     const eight = rack.find((ball) => ball.number === 8);
 
     expect(eight?.position.x).toBeGreaterThan(FOOT_SPOT.x);
-    expect(eight?.position.y).toBe(FOOT_SPOT.y);
+    expect(eight?.position.y).toBeCloseTo(FOOT_SPOT.y, 5);
+  });
+
+  it("adds a subtle deterministic looseness to the rack for livelier breaks", () => {
+    const rack = createPracticeRack();
+    const apex = rack.find((ball) => ball.number === 1);
+
+    expect(apex?.position.x).toBe(FOOT_SPOT.x);
+    expect(apex?.position.y).not.toBe(FOOT_SPOT.y);
   });
 
   it("classifies solids, stripes, and the 8 ball", () => {
