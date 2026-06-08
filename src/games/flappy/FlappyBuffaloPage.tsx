@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowLeft, Play, RotateCcw, Trophy, Zap } from "lucide-react";
+import { ArrowLeft, Maximize2, Minimize2, Play, RotateCcw, Trophy, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   BUFFALO_RADIUS,
@@ -20,11 +20,13 @@ import type { FlappyState, PipePair } from "./flappyTypes";
 const bestScoreKey = "black-buffalo-flappy-best";
 
 export function FlappyBuffaloPage() {
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
   const stateRef = useRef<FlappyState>(createInitialFlappyState(readBestScore()));
   const [state, setState] = useState(stateRef.current);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const updateState = useCallback((updater: (current: FlappyState) => FlappyState) => {
     setState((current) => {
@@ -37,6 +39,19 @@ export function FlappyBuffaloPage() {
   const handleFlap = useCallback(() => {
     updateState((current) => flap(current));
   }, [updateState]);
+
+  const handleFullscreen = useCallback(async () => {
+    if (!stageRef.current || !document.fullscreenEnabled) {
+      return;
+    }
+
+    if (document.fullscreenElement === stageRef.current) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await stageRef.current.requestFullscreen();
+  }, []);
 
   useEffect(() => {
     drawFlappy(canvasRef.current, state);
@@ -80,6 +95,15 @@ export function FlappyBuffaloPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleFlap]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === stageRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   const actionLabel =
     state.phase === "gameOver" ? "Restart" : state.phase === "ready" ? "Start" : "Flap";
   const actionIcon = state.phase === "gameOver" ? <RotateCcw size={18} /> : <Play size={18} />;
@@ -101,7 +125,22 @@ export function FlappyBuffaloPage() {
       </div>
 
       <div className="flappy-layout">
-        <div className="flappy-stage">
+        <div ref={stageRef} className="flappy-stage">
+          <button
+            className="flappy-fullscreen-button"
+            type="button"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            onClick={handleFullscreen}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {isFullscreen ? (
+              <Minimize2 size={17} aria-hidden="true" />
+            ) : (
+              <Maximize2 size={17} aria-hidden="true" />
+            )}
+            <span>{isFullscreen ? "Exit" : "Fullscreen"}</span>
+          </button>
           <canvas
             ref={canvasRef}
             className="flappy-canvas"

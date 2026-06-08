@@ -720,6 +720,7 @@ h1 {
 }
 
 .flappy-stage {
+  position: relative;
   display: grid;
   place-items: center;
   min-height: 620px;
@@ -732,6 +733,28 @@ h1 {
   box-shadow: var(--shadow-soft);
 }
 
+.flappy-fullscreen-button {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.72);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.flappy-fullscreen-button:hover {
+  border-color: rgba(53, 255, 132, 0.72);
+}
+
 .flappy-canvas {
   display: block;
   width: min(100%, 420px);
@@ -741,6 +764,20 @@ h1 {
   border-radius: var(--radius);
   touch-action: manipulation;
   cursor: pointer;
+}
+
+.flappy-stage:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #050505;
+}
+
+.flappy-stage:fullscreen .flappy-canvas {
+  width: min(100vw, calc((100vh - 24px) * 0.65625));
+  max-height: calc(100vh - 24px);
 }
 
 .flappy-panel {
@@ -1130,7 +1167,8 @@ input[type="range"] {
     max-height: 620px;
   }
 
-  .pool-fullscreen-button {
+  .pool-fullscreen-button,
+  .flappy-fullscreen-button {
     display: none;
   }
 
@@ -1199,7 +1237,8 @@ input[type="range"] {
 }
 
 @media (pointer: coarse) {
-  .pool-fullscreen-button {
+  .pool-fullscreen-button,
+  .flappy-fullscreen-button {
     display: none;
   }
 }
