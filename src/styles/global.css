@@ -80,6 +80,15 @@ a {
   padding: 6px 0 14px;
 }
 
+.site-shell--home .site-header {
+  justify-content: center;
+  text-align: center;
+}
+
+.site-shell--home .brand-mark {
+  justify-content: center;
+}
+
 .brand-mark,
 .site-nav,
 .site-nav a,
@@ -151,7 +160,8 @@ a {
 
 .lobby-view,
 .blackjack-view,
-.billiards-view {
+.billiards-view,
+.flappy-view {
   display: grid;
   gap: 28px;
 }
@@ -321,6 +331,114 @@ h1 {
   background: linear-gradient(90deg, #f6ead0, #a96f39 36%, #3a2112);
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.32);
   transform: rotate(-25deg);
+}
+
+.flappy-card-art {
+  position: absolute;
+  inset: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 35% 36%, rgba(53, 255, 132, 0.2), transparent 34%),
+    linear-gradient(145deg, rgba(5, 5, 5, 0.42), rgba(13, 63, 45, 0.86));
+}
+
+.flappy-card-art::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(115deg, transparent 0 40%, rgba(240, 198, 106, 0.14) 40% 42%, transparent 42%),
+    repeating-linear-gradient(90deg, rgba(246, 234, 208, 0.08) 0 1px, transparent 1px 42px);
+}
+
+.flappy-card-pipe {
+  position: absolute;
+  right: 34px;
+  width: 64px;
+  border: 1px solid rgba(246, 234, 208, 0.2);
+  border-radius: 5px;
+  background: linear-gradient(90deg, #0f8f55, #3dff84 48%, #0a5c38);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.28);
+}
+
+.flappy-card-pipe--top {
+  top: -10px;
+  height: 110px;
+}
+
+.flappy-card-pipe--bottom {
+  bottom: -10px;
+  height: 126px;
+}
+
+.flappy-card-face {
+  position: absolute;
+  left: 38px;
+  top: 42%;
+  display: block;
+  width: 92px;
+  height: 92px;
+  border: 1px solid rgba(246, 234, 208, 0.2);
+  border-radius: 50%;
+  background: #26170f;
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.38);
+  transform: translateY(-50%) rotate(-8deg);
+}
+
+.flappy-card-horn {
+  position: absolute;
+  top: 10px;
+  width: 34px;
+  height: 24px;
+  border-radius: 999px 999px 0 0;
+  background: var(--color-cream);
+}
+
+.flappy-card-horn--left {
+  left: -12px;
+  transform: rotate(-30deg);
+}
+
+.flappy-card-horn--right {
+  right: -12px;
+  transform: rotate(30deg);
+}
+
+.flappy-card-mane {
+  position: absolute;
+  inset: 5px 17px 49px;
+  border-radius: 999px;
+  background: #120b07;
+}
+
+.flappy-card-eye,
+.flappy-card-snout {
+  position: absolute;
+  background: var(--color-cream);
+}
+
+.flappy-card-eye {
+  top: 40px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.flappy-card-eye--left {
+  left: 29px;
+}
+
+.flappy-card-eye--right {
+  right: 29px;
+}
+
+.flappy-card-snout {
+  left: 24px;
+  bottom: 17px;
+  width: 44px;
+  height: 25px;
+  border-radius: 999px;
+  background: #3a2417;
 }
 
 .game-card__body {
@@ -592,6 +710,68 @@ h1 {
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-panel);
+}
+
+.flappy-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 460px) minmax(240px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.flappy-stage {
+  display: grid;
+  place-items: center;
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(5, 5, 5, 0.84), rgba(14, 39, 29, 0.56)),
+    #050505;
+  box-shadow: var(--shadow-soft);
+}
+
+.flappy-canvas {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  max-height: calc(100vh - 170px);
+  border: 1px solid rgba(246, 234, 208, 0.12);
+  border-radius: var(--radius);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.flappy-panel {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-panel);
+}
+
+.panel-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--color-gold-bright);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.flappy-panel h2 {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.flappy-panel p {
+  color: var(--color-muted);
+  line-height: 1.55;
 }
 
 .billiards-panel h2 {
@@ -881,7 +1061,8 @@ input[type="range"] {
 @media (max-width: 980px) {
   .table-hero,
   .control-panel,
-  .billiards-layout {
+  .billiards-layout,
+  .flappy-layout {
     grid-template-columns: 1fr;
   }
 
@@ -939,6 +1120,14 @@ input[type="range"] {
 
   .pool-canvas {
     min-height: 360px;
+  }
+
+  .flappy-stage {
+    min-height: 520px;
+  }
+
+  .flappy-canvas {
+    max-height: 620px;
   }
 
   .pool-fullscreen-button {

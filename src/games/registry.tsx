@@ -46,4 +46,27 @@ export const games: GameDefinition[] = [
       </div>
     ),
   },
+  {
+    id: "flappy-buffalo",
+    name: "Flappy Buffalo",
+    path: "/games/flappy-buffalo",
+    description:
+      "Tap, click, or press Space to keep the buffalo face flying through bright green gates.",
+    playTime: "Arcade",
+    status: "Live",
+    art: (
+      <div className="flappy-card-art">
+        <span className="flappy-card-pipe flappy-card-pipe--top" />
+        <span className="flappy-card-pipe flappy-card-pipe--bottom" />
+        <span className="flappy-card-face">
+          <span className="flappy-card-horn flappy-card-horn--left" />
+          <span className="flappy-card-horn flappy-card-horn--right" />
+          <span className="flappy-card-mane" />
+          <span className="flappy-card-eye flappy-card-eye--left" />
+          <span className="flappy-card-eye flappy-card-eye--right" />
+          <span className="flappy-card-snout" />
+        </span>
+      </div>
+    ),
+  },
 ];

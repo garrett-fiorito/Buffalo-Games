@@ -1,5 +1,5 @@
-import { CircleDot, Landmark, Sparkles } from "lucide-react";
-import { Link, NavLink } from "react-router-dom";
+import { Bird, CircleDot, Landmark, Sparkles } from "lucide-react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 
 type SiteLayoutProps = {
@@ -7,8 +7,11 @@ type SiteLayoutProps = {
 };
 
 export function SiteLayout({ children }: SiteLayoutProps) {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+
   return (
-    <div className="site-shell">
+    <div className={`site-shell${isHome ? " site-shell--home" : ""}`}>
       <header className="site-header" aria-label="Site header">
         <Link className="brand-mark" to="/" aria-label="Black Buffalo Games home">
           <span className="brand-icon" aria-hidden="true">
@@ -36,6 +39,13 @@ export function SiteLayout({ children }: SiteLayoutProps) {
           >
             <CircleDot size={17} aria-hidden="true" />
             Billiards
+          </NavLink>
+          <NavLink
+            to="/games/flappy-buffalo"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <Bird size={17} aria-hidden="true" />
+            Flappy
           </NavLink>
         </nav>
       </header>

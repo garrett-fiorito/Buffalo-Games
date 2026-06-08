@@ -14,7 +14,7 @@ import type {
 export const TABLE_WIDTH = 1000;
 export const TABLE_HEIGHT = 560;
 export const BALL_RADIUS = 12;
-export const POCKET_RADIUS = 28;
+export const POCKET_RADIUS = 25;
 export const HEAD_SPOT: Vector2 = { x: 260, y: TABLE_HEIGHT / 2 };
 export const FOOT_SPOT: Vector2 = { x: 695, y: TABLE_HEIGHT / 2 };
 export const STOP_SPEED = 0.08;
