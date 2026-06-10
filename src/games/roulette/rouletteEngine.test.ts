@@ -108,6 +108,21 @@ describe("rouletteEngine", () => {
     ]);
   });
 
+  it("settles row, split, and corner bets with correct returns", () => {
+    const pocket: RoulettePocket = { value: "5", color: "red" };
+    const bets: RouletteBet[] = [
+      { id: "row2", kind: "row2", label: "2nd Row", amount: 10 },
+      { id: "split-2-5", kind: "split", label: "2/5", amount: 10, numbers: ["2", "5"] },
+      { id: "corner-1-2-4-5", kind: "corner", label: "1/2/4/5", amount: 10, numbers: ["1", "2", "4", "5"] },
+      { id: "split-1-4", kind: "split", label: "1/4", amount: 10, numbers: ["1", "4"] },
+    ];
+    const result = settleBets(bets, pocket);
+
+    expect(result.totalReturn).toBe(30 + 180 + 90);
+    expect(result.net).toBe(260);
+    expect(result.winningBets.map((bet) => bet.kind)).toEqual(["row2", "split", "corner"]);
+  });
+
   it("finishes a spin, pays winnings, clears bets, and records history", () => {
     const betting = placeBet(createInitialRouletteState(), "red", "Red");
     const spinning = beginSpin(betting);

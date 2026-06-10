@@ -71,10 +71,10 @@ export const games: GameDefinition[] = [
   },
   {
     id: "roulette",
-    name: "Double Zero Roulette",
+    name: "Golden Ball Roulette",
     path: "/games/roulette",
     description:
-      "Play American double-zero roulette with a polished wheel, casino felt betting table, chip rack, and accurate payouts.",
+      "Play American double-zero roulette with a golden 50x target, polished wheel, casino felt betting table, and accurate payouts.",
     playTime: "Casino",
     status: "Live",
     art: (
@@ -86,6 +86,7 @@ export const games: GameDefinition[] = [
           <span>32</span>
         </span>
         <span className="roulette-card-ball" />
+        <span className="roulette-card-golden-ball" />
         <span className="roulette-card-chip roulette-card-chip--one">25</span>
         <span className="roulette-card-chip roulette-card-chip--two">100</span>
       </div>

@@ -733,6 +733,22 @@ h1 {
   box-shadow: 0 0 18px rgba(246, 234, 208, 0.8);
 }
 
+.roulette-card-golden-ball {
+  position: absolute;
+  top: 36px;
+  right: 44px;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(246, 234, 208, 0.82);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 32%, #fff6ca 0 18%, transparent 19%),
+    radial-gradient(circle at 50% 50%, #ffd866, #c88a16 72%);
+  box-shadow:
+    0 0 24px rgba(255, 216, 102, 0.86),
+    0 12px 24px rgba(0, 0, 0, 0.34);
+}
+
 .roulette-card-chip {
   position: absolute;
   display: grid;
@@ -1077,10 +1093,10 @@ h1 {
 .table-hero h1 {
   max-width: 880px;
   margin-bottom: 0;
-  color: #35ff84;
+  color: #f0f2ed;
   font-size: clamp(1.9rem, 4vw, 3.25rem);
   line-height: 1;
-  text-shadow: 0 0 18px rgba(53, 255, 132, 0.24);
+  text-shadow: 0 0 18px rgba(246, 234, 208, 0.12);
   white-space: nowrap;
 }
 
@@ -2185,9 +2201,9 @@ body.mini-golf-game-active {
 
 .roulette-felt {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 76px;
   gap: 8px;
-  padding: 14px;
+  overflow-x: auto;
+  padding: 12px;
   border: 1px solid rgba(53, 255, 132, 0.28);
   border-radius: var(--radius);
   background:
@@ -2195,42 +2211,52 @@ body.mini-golf-game-active {
     #0d5f3d;
 }
 
+.roulette-inside-board {
+  display: grid;
+  grid-template-columns: minmax(48px, 0.12fr) minmax(0, 1fr) minmax(58px, 0.14fr);
+  gap: 5px;
+  min-width: 530px;
+}
+
 .roulette-zeroes,
 .roulette-number-grid,
-.roulette-column-grid,
+.roulette-row-grid,
 .roulette-outside-grid {
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 
 .roulette-zeroes {
+  position: relative;
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
 .roulette-number-grid {
-  grid-template-columns: repeat(12, minmax(42px, 1fr));
+  position: relative;
+  grid-template-columns: repeat(12, minmax(30px, 1fr));
   grid-auto-flow: column;
-  grid-template-rows: repeat(3, 50px);
+  grid-template-rows: repeat(3, 44px);
 }
 
-.roulette-column-grid {
-  grid-template-rows: repeat(3, 50px);
+.roulette-row-grid {
+  grid-template-rows: repeat(3, 44px);
 }
 
 .roulette-outside-grid {
-  grid-column: 2 / 4;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 530px;
 }
 
 .roulette-number,
 .roulette-outside {
   position: relative;
   display: grid;
-  min-height: 50px;
+  min-height: 44px;
   place-items: center;
   border: 1px solid rgba(246, 234, 208, 0.34);
   border-radius: 6px;
   color: var(--color-cream);
+  font-size: clamp(0.72rem, 1.3vw, 0.9rem);
   font-weight: 900;
 }
 
@@ -2252,8 +2278,14 @@ body.mini-golf-game-active {
   background: rgba(5, 5, 5, 0.2);
 }
 
+.roulette-row-bet {
+  font-size: clamp(0.62rem, 1.1vw, 0.78rem);
+  text-align: center;
+}
+
 .roulette-number strong,
-.roulette-outside strong {
+.roulette-outside strong,
+.roulette-inside-bet span {
   position: absolute;
   right: 4px;
   bottom: 4px;
@@ -2266,6 +2298,84 @@ body.mini-golf-game-active {
   color: var(--color-cream);
   background: #971321;
   font-size: 0.68rem;
+}
+
+.roulette-inside-markers {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(23, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  pointer-events: none;
+}
+
+.roulette-inside-bet {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(246, 234, 208, 0.82);
+  color: var(--color-cream);
+  background: rgba(240, 198, 106, 0.72);
+  box-shadow:
+    0 0 0 2px rgba(4, 56, 34, 0.72),
+    0 0 12px rgba(240, 198, 106, 0.42);
+  pointer-events: auto;
+}
+
+.roulette-inside-bet:hover:not(:disabled),
+.roulette-inside-bet:focus-visible {
+  background: var(--color-gold-bright);
+  outline: 2px solid rgba(246, 234, 208, 0.9);
+  outline-offset: 2px;
+}
+
+.roulette-inside-bet--horizontal {
+  width: 12px;
+  height: 24px;
+  border-radius: 999px;
+  justify-self: center;
+  align-self: center;
+}
+
+.roulette-inside-bet--vertical {
+  width: 24px;
+  height: 12px;
+  border-radius: 999px;
+  justify-self: center;
+  align-self: center;
+}
+
+.roulette-inside-bet--corner,
+.roulette-inside-bet--zero-split {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  justify-self: center;
+  align-self: center;
+}
+
+.roulette-inside-bet--zero-split {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.roulette-inside-bet span {
+  inset: auto 50% 50% auto;
+  right: auto;
+  bottom: auto;
+  transform: translate(50%, 50%);
+  min-width: 20px;
+  min-height: 20px;
+  background: #7c111e;
+  font-size: 0.58rem;
+}
+
+.roulette-inside-bet span:empty {
+  display: none;
 }
 
 .horse-layout {
@@ -2899,23 +3009,9 @@ input[type="range"] {
     object-fit: contain;
   }
 
-  .roulette-felt {
-    grid-template-columns: 58px minmax(0, 1fr);
-  }
-
-  .roulette-number-grid {
-    grid-template-columns: repeat(6, minmax(40px, 1fr));
-    grid-template-rows: repeat(6, 46px);
-  }
-
-  .roulette-column-grid {
-    grid-column: 1 / 3;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: 44px;
-  }
-
+  .roulette-inside-board,
   .roulette-outside-grid {
-    grid-column: 1 / 3;
+    min-width: 500px;
   }
 
   .pool-fullscreen-button,
@@ -2974,11 +3070,6 @@ input[type="range"] {
 
   .roulette-felt {
     padding: 10px;
-  }
-
-  .roulette-number-grid {
-    grid-template-columns: repeat(4, minmax(38px, 1fr));
-    grid-template-rows: repeat(9, 42px);
   }
 
   .roulette-outside-grid {

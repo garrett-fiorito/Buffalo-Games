@@ -27,18 +27,18 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Lobby
           </NavLink>
           <NavLink
-            to="/games/billiards"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            <CircleDot size={17} aria-hidden="true" />
-            Billiards
-          </NavLink>
-          <NavLink
             to="/games/blackjack"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <Sparkles size={17} aria-hidden="true" />
             Blackjack
+          </NavLink>
+          <NavLink
+            to="/games/billiards"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <CircleDot size={17} aria-hidden="true" />
+            Billiards
           </NavLink>
           <NavLink
             to="/games/brave-buffalo"
@@ -48,18 +48,18 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Brave Buffalo
           </NavLink>
           <NavLink
-            to="/games/roulette"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            <CircleDollarSign size={17} aria-hidden="true" />
-            Roulette
-          </NavLink>
-          <NavLink
             to="/games/flappy-buffalo"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <Bird size={17} aria-hidden="true" />
             Flappy
+          </NavLink>
+          <NavLink
+            to="/games/roulette"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <CircleDollarSign size={17} aria-hidden="true" />
+            Golden Ball
           </NavLink>
           <NavLink
             to="/games/horse-racing"

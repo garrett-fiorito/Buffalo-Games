@@ -25,7 +25,13 @@ import type {
 
 type RouletteAction =
   | { type: "chip"; value: number }
-  | { type: "bet"; kind: RouletteBetKind; label: string; number?: RoulettePocketValue }
+  | {
+      type: "bet";
+      kind: RouletteBetKind;
+      label: string;
+      number?: RoulettePocketValue;
+      numbers?: RoulettePocketValue[];
+    }
   | { type: "clear" }
   | { type: "spin" }
   | { type: "finish"; pocket: RoulettePocket; goldenPocket: RoulettePocket }
@@ -33,7 +39,6 @@ type RouletteAction =
 
 const pocketAngle = 360 / rouletteWheel.length;
 const rouletteNumbers = Array.from({ length: 36 }, (_, index) => String(index + 1) as RoulettePocketValue);
-const straightNumbers: RoulettePocketValue[] = ["0", "00", ...rouletteNumbers];
 
 type PendingSpin = {
   pocket: RoulettePocket;
@@ -53,12 +58,21 @@ type RouletteSpinStyle = {
   jitterTwo: number;
 };
 
+type InsideBetDefinition = {
+  id: string;
+  label: string;
+  numbers: RoulettePocketValue[];
+  gridColumn: number;
+  gridRow: number;
+  orientation?: "horizontal" | "vertical";
+};
+
 function rouletteReducer(state: RouletteState, action: RouletteAction): RouletteState {
   switch (action.type) {
     case "chip":
       return setSelectedChip(state, action.value);
     case "bet":
-      return placeBet(state, action.kind, action.label, action.number);
+      return placeBet(state, action.kind, action.label, action.number, action.numbers);
     case "clear":
       return clearBets(state);
     case "spin":
@@ -147,7 +161,7 @@ export function RoulettePage() {
             <ArrowLeft size={18} aria-hidden="true" />
             Lobby
           </Link>
-          <h1 id="roulette-title">Double Zero Roulette</h1>
+          <h1 id="roulette-title">Golden Ball Roulette</h1>
         </div>
         <div className="table-stats" aria-label="Roulette stats">
           <Stat label="Chips" value={state.chips.toLocaleString()} />
@@ -264,53 +278,86 @@ export function RoulettePage() {
           </div>
 
           <div className="roulette-felt">
-            <div className="roulette-zeroes">
-              {(["0", "00"] as RoulettePocketValue[]).map((number) => (
-                <BetButton
-                  key={number}
-                  className="roulette-number roulette-number--green"
-                  label={number}
-                  amount={betLookup.get(`straight-${number}`)}
+            <div className="roulette-inside-board">
+              <div className="roulette-zeroes">
+                {(["0", "00"] as RoulettePocketValue[]).map((number) => (
+                  <BetButton
+                    key={number}
+                    className="roulette-number roulette-number--green"
+                    label={number}
+                    amount={betLookup.get(`straight-${number}`)}
+                    disabled={state.phase === "spinning"}
+                    onClick={() => dispatch({ type: "bet", kind: "straight", label: number, number })}
+                  />
+                ))}
+                <InsideBetButton
+                  className="roulette-inside-bet roulette-inside-bet--zero-split"
+                  label="0/00"
+                  amount={betLookup.get(getInsideBetId("split", ["0", "00"]))}
                   disabled={state.phase === "spinning"}
-                  onClick={() => dispatch({ type: "bet", kind: "straight", label: number, number })}
+                  onClick={() => dispatchInsideBet(dispatch, "split", ["0", "00"])}
                 />
-              ))}
-            </div>
+              </div>
 
-            <div className="roulette-number-grid">
-              {rouletteNumbers.map((number) => (
-                <BetButton
-                  key={number}
-                  className={`roulette-number roulette-number--${getPocketColor(number)}`}
-                  label={number}
-                  amount={betLookup.get(`straight-${number}`)}
-                  disabled={state.phase === "spinning"}
-                  onClick={() => dispatch({ type: "bet", kind: "straight", label: number, number })}
-                />
-              ))}
-            </div>
+              <div className="roulette-number-grid">
+                {rouletteNumbers.map((number) => (
+                  <BetButton
+                    key={number}
+                    className={`roulette-number roulette-number--${getPocketColor(number)}`}
+                    label={number}
+                    amount={betLookup.get(`straight-${number}`)}
+                    disabled={state.phase === "spinning"}
+                    onClick={() => dispatch({ type: "bet", kind: "straight", label: number, number })}
+                  />
+                ))}
+                <div className="roulette-inside-markers" aria-label="Split and corner bets">
+                  {getSplitBets().map((bet) => (
+                    <InsideBetButton
+                      key={bet.id}
+                      className={`roulette-inside-bet roulette-inside-bet--${bet.orientation}`}
+                      label={bet.label}
+                      amount={betLookup.get(bet.id)}
+                      disabled={state.phase === "spinning"}
+                      style={{
+                        gridColumn: bet.gridColumn,
+                        gridRow: bet.gridRow,
+                      }}
+                      onClick={() => dispatchInsideBet(dispatch, "split", bet.numbers)}
+                    />
+                  ))}
+                  {getCornerBets().map((bet) => (
+                    <InsideBetButton
+                      key={bet.id}
+                      className="roulette-inside-bet roulette-inside-bet--corner"
+                      label={bet.label}
+                      amount={betLookup.get(bet.id)}
+                      disabled={state.phase === "spinning"}
+                      style={{
+                        gridColumn: bet.gridColumn,
+                        gridRow: bet.gridRow,
+                      }}
+                      onClick={() => dispatchInsideBet(dispatch, "corner", bet.numbers)}
+                    />
+                  ))}
+                </div>
+              </div>
 
-            <div className="roulette-column-grid">
-              {[
-                ["column1", "2:1"],
-                ["column2", "2:1"],
-                ["column3", "2:1"],
-              ].map(([kind, label]) => (
-                <BetButton
-                  key={kind}
-                  className="roulette-outside"
-                  label={label}
-                  amount={betLookup.get(kind)}
-                  disabled={state.phase === "spinning"}
-                  onClick={() =>
-                    dispatch({
-                      type: "bet",
-                      kind: kind as RouletteBetKind,
-                      label: `Column ${kind.slice(-1)}`,
-                    })
-                  }
-                />
-              ))}
+              <div className="roulette-row-grid">
+                {[
+                  ["row1", "1st Row"],
+                  ["row2", "2nd Row"],
+                  ["row3", "3rd Row"],
+                ].map(([kind, label]) => (
+                  <BetButton
+                    key={kind}
+                    className="roulette-outside roulette-row-bet"
+                    label={label}
+                    amount={betLookup.get(kind)}
+                    disabled={state.phase === "spinning"}
+                    onClick={() => dispatch({ type: "bet", kind: kind as RouletteBetKind, label })}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="roulette-outside-grid">
@@ -327,7 +374,7 @@ export function RoulettePage() {
           </div>
 
           <p className="table-note">
-            American double-zero roulette pays 35:1 on single numbers, 2:1 on dozens and columns, and 1:1 on outside bets.
+            American double-zero roulette pays 35:1 on single numbers, 17:1 on splits, 8:1 on corners, 2:1 on dozens and rows, and 1:1 on outside bets.
             Each spin also reveals one golden number from the preview row; a straight-up hit on it pays 50:1.
           </p>
         </div>
@@ -379,6 +426,36 @@ function BetButton({
   );
 }
 
+function InsideBetButton({
+  className,
+  label,
+  amount,
+  disabled,
+  style,
+  onClick,
+}: {
+  className: string;
+  label: string;
+  amount?: number;
+  disabled?: boolean;
+  style?: CSSProperties;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={className}
+      type="button"
+      disabled={disabled}
+      style={style}
+      aria-label={`${label} bet`}
+      title={label}
+      onClick={onClick}
+    >
+      <span>{amount ?? ""}</span>
+    </button>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="stat-pill">
@@ -386,6 +463,85 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function dispatchInsideBet(
+  dispatch: Dispatch<RouletteAction>,
+  kind: "split" | "corner",
+  numbers: RoulettePocketValue[],
+) {
+  dispatch({
+    type: "bet",
+    kind,
+    label: numbers.join("/"),
+    numbers,
+  });
+}
+
+function getSplitBets(): InsideBetDefinition[] {
+  const bets: InsideBetDefinition[] = [];
+
+  for (let column = 1; column <= 11; column += 1) {
+    for (let row = 1; row <= 3; row += 1) {
+      const numbers = [getRouletteGridNumber(row, column), getRouletteGridNumber(row, column + 1)];
+      bets.push({
+        id: getInsideBetId("split", numbers),
+        label: numbers.join("/"),
+        numbers,
+        gridColumn: column * 2,
+        gridRow: row * 2 - 1,
+        orientation: "horizontal",
+      });
+    }
+  }
+
+  for (let column = 1; column <= 12; column += 1) {
+    for (let row = 1; row <= 2; row += 1) {
+      const numbers = [getRouletteGridNumber(row, column), getRouletteGridNumber(row + 1, column)];
+      bets.push({
+        id: getInsideBetId("split", numbers),
+        label: numbers.join("/"),
+        numbers,
+        gridColumn: column * 2 - 1,
+        gridRow: row * 2,
+        orientation: "vertical",
+      });
+    }
+  }
+
+  return bets;
+}
+
+function getCornerBets(): InsideBetDefinition[] {
+  const bets: InsideBetDefinition[] = [];
+
+  for (let column = 1; column <= 11; column += 1) {
+    for (let row = 1; row <= 2; row += 1) {
+      const numbers = [
+        getRouletteGridNumber(row, column),
+        getRouletteGridNumber(row + 1, column),
+        getRouletteGridNumber(row, column + 1),
+        getRouletteGridNumber(row + 1, column + 1),
+      ];
+      bets.push({
+        id: getInsideBetId("corner", numbers),
+        label: numbers.join("/"),
+        numbers,
+        gridColumn: column * 2,
+        gridRow: row * 2,
+      });
+    }
+  }
+
+  return bets;
+}
+
+function getRouletteGridNumber(row: number, column: number): RoulettePocketValue {
+  return String((column - 1) * 3 + row) as RoulettePocketValue;
+}
+
+function getInsideBetId(kind: "split" | "corner", numbers: RoulettePocketValue[]): string {
+  return `${kind}-${numbers.join("-")}`;
 }
 
 function getResultText(state: RouletteState): string {

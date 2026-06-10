@@ -47,12 +47,17 @@ export type RoulettePocket = {
 
 export type RouletteBetKind =
   | "straight"
+  | "split"
+  | "corner"
   | "red"
   | "black"
   | "odd"
   | "even"
   | "low"
   | "high"
+  | "row1"
+  | "row2"
+  | "row3"
   | "dozen1"
   | "dozen2"
   | "dozen3"
@@ -66,6 +71,7 @@ export type RouletteBet = {
   label: string;
   amount: number;
   number?: RoulettePocketValue;
+  numbers?: RoulettePocketValue[];
 };
 
 export type RoulettePhase = "betting" | "spinning" | "result";

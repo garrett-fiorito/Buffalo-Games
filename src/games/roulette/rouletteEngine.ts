@@ -102,12 +102,13 @@ export function placeBet(
   kind: RouletteBetKind,
   label: string,
   number?: RoulettePocketValue,
+  numbers?: RoulettePocketValue[],
 ): RouletteState {
   if (state.phase === "spinning" || state.chips < state.selectedChip) {
     return state;
   }
 
-  const id = getBetId(kind, number);
+  const id = getBetId(kind, number, numbers);
   const existingBet = state.bets.find((bet) => bet.id === id);
   const nextBets = existingBet
     ? state.bets.map((bet) =>
@@ -121,6 +122,7 @@ export function placeBet(
           label,
           amount: state.selectedChip,
           number,
+          numbers,
         },
       ];
 
@@ -215,6 +217,9 @@ export function isWinningBet(bet: RouletteBet, pocket: RoulettePocket): boolean 
   switch (bet.kind) {
     case "straight":
       return bet.number === pocket.value;
+    case "split":
+    case "corner":
+      return bet.numbers?.includes(pocket.value) ?? false;
     case "red":
     case "black":
       return pocket.color === bet.kind;
@@ -226,18 +231,21 @@ export function isWinningBet(bet: RouletteBet, pocket: RoulettePocket): boolean 
       return numericValue !== null && numericValue >= 1 && numericValue <= 18;
     case "high":
       return numericValue !== null && numericValue >= 19 && numericValue <= 36;
+    case "row1":
+    case "column1":
+      return numericValue !== null && numericValue % 3 === 1;
+    case "row2":
+    case "column2":
+      return numericValue !== null && numericValue % 3 === 2;
+    case "row3":
+    case "column3":
+      return numericValue !== null && numericValue % 3 === 0;
     case "dozen1":
       return numericValue !== null && numericValue >= 1 && numericValue <= 12;
     case "dozen2":
       return numericValue !== null && numericValue >= 13 && numericValue <= 24;
     case "dozen3":
       return numericValue !== null && numericValue >= 25 && numericValue <= 36;
-    case "column1":
-      return numericValue !== null && numericValue % 3 === 1;
-    case "column2":
-      return numericValue !== null && numericValue % 3 === 2;
-    case "column3":
-      return numericValue !== null && numericValue % 3 === 0;
     default:
       return false;
   }
@@ -248,7 +256,15 @@ export function getPayoutMultiplier(kind: RouletteBetKind, goldenHit = false): n
     return goldenHit ? 50 : 35;
   }
 
-  if (kind.startsWith("dozen") || kind.startsWith("column")) {
+  if (kind === "split") {
+    return 17;
+  }
+
+  if (kind === "corner") {
+    return 8;
+  }
+
+  if (kind.startsWith("dozen") || kind.startsWith("column") || kind.startsWith("row")) {
     return 2;
   }
 
@@ -278,6 +294,18 @@ export function getNumericPocketValue(value: RoulettePocketValue): number | null
   return Number(value);
 }
 
-export function getBetId(kind: RouletteBetKind, number?: RoulettePocketValue): string {
-  return kind === "straight" ? `straight-${number}` : kind;
+export function getBetId(
+  kind: RouletteBetKind,
+  number?: RoulettePocketValue,
+  numbers?: RoulettePocketValue[],
+): string {
+  if (kind === "straight") {
+    return `straight-${number}`;
+  }
+
+  if (kind === "split" || kind === "corner") {
+    return `${kind}-${numbers?.join("-")}`;
+  }
+
+  return kind;
 }
