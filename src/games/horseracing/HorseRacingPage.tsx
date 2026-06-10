@@ -511,10 +511,17 @@ function drawRaceOverlay(context: CanvasRenderingContext2D, state: HorseRaceStat
 }
 
 function getRaceProgress(entry: RacePlanEntry, elapsedMs: number): number {
-  const raw = Math.min(1, elapsedMs / entry.finishTimeMs);
-  const eased = raw < 1 ? Math.pow(raw, 0.92) : 1;
-  const wobble = Math.sin(raw * Math.PI * 5 + entry.surge * 8) * 0.012 * (1 - raw);
-  return Math.min(1, Math.max(0, eased + wobble));
+  const raceProgress = Math.min(1, elapsedMs / RACE_DURATION_MS);
+  const finishProgress = Math.min(1, elapsedMs / entry.finishTimeMs);
+  const eased = finishProgress < 1 ? Math.pow(finishProgress, 0.96) : 1;
+  const earlyDrama = Math.sin(raceProgress * Math.PI) * (entry.surge - 0.5) * 0.16;
+  const laneRhythm = Math.sin(raceProgress * Math.PI * 5 + entry.lane * 1.7 + entry.surge * 8) * 0.018 * (1 - raceProgress);
+  const lateKick =
+    Math.max(0, raceProgress - 0.62) *
+    Math.max(0, 1 - entry.finishTimeMs / RACE_DURATION_MS) *
+    1.35;
+
+  return Math.min(1, Math.max(0, eased + earlyDrama + laneRhythm + lateKick));
 }
 
 function getTrackPoint(progress: number, lane: number) {

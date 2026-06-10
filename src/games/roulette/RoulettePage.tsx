@@ -92,7 +92,7 @@ export function RoulettePage() {
     const nextPocket = pickSpinPocket(state.spinIndex);
     const pocketIndex = americanWheelSequence.indexOf(nextPocket.value);
     const nextWheelRotation = getNextWheelRotation(wheelRotation, pocketIndex);
-    const nextBallRotation = ballRotation - 360 * 8 - pocketIndex * pocketAngle - 18;
+    const nextBallRotation = getNextBallRotation(ballRotation, nextWheelRotation, pocketIndex);
 
     setPendingPocket(nextPocket);
     setWheelRotation(nextWheelRotation);
@@ -377,4 +377,20 @@ function getNextWheelRotation(currentRotation: number, pocketIndex: number): num
   }
 
   return nextRotation;
+}
+
+function getNextBallRotation(currentRotation: number, wheelRotation: number, pocketIndex: number): number {
+  const targetAngle = normalizeAngle(wheelRotation + pocketIndex * pocketAngle);
+  const nextBaseRotation = (Math.floor(currentRotation / 360) + 8) * 360;
+  let nextRotation = nextBaseRotation + targetAngle;
+
+  while (nextRotation <= currentRotation + 720) {
+    nextRotation += 360;
+  }
+
+  return nextRotation;
+}
+
+function normalizeAngle(angle: number): number {
+  return ((angle % 360) + 360) % 360;
 }

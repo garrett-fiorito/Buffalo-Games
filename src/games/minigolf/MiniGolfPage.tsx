@@ -560,7 +560,7 @@ function drawMiniGolf(
 
   if (ball) {
     if (aim.active && !viewState.moving) {
-      drawAimGuide(context, ball.position, aim.pointer, scale, toScreen);
+      drawAimGuide(context, ball.position, aim.pointer, hole, scale, toScreen);
     }
 
     drawBall(context, ball.position, scale, toScreen);
@@ -699,35 +699,141 @@ function drawAimGuide(
   context: CanvasRenderingContext2D,
   ball: Vector2,
   pointer: Vector2,
+  hole: MiniGolfHole,
   scale: number,
   toScreen: (point: Vector2) => Vector2,
 ) {
   const shot = getShotVector(ball, pointer);
   const ballPoint = toScreen(ball);
   const pointerPoint = toScreen(pointer);
-  const guideEnd = toScreen({
-    x: ball.x + shot.direction.x * (130 + 210 * shot.power),
-    y: ball.y + shot.direction.y * (130 + 210 * shot.power),
-  });
+  const guideEnd = toScreen(getAimProjectionEnd(ball, shot.direction, hole));
 
   context.save();
   context.lineCap = "round";
-  context.setLineDash([8 * scale, 8 * scale]);
-  context.lineWidth = Math.max(2, 3 * scale);
-  context.strokeStyle = "rgba(46, 255, 168, 0.86)";
-  context.shadowBlur = 12 * scale;
-  context.shadowColor = "rgba(46, 255, 168, 0.76)";
-  context.beginPath();
-  context.moveTo(ballPoint.x, ballPoint.y);
-  context.lineTo(guideEnd.x, guideEnd.y);
-  context.stroke();
-  context.setLineDash([]);
+  if (shot.power > 0) {
+    context.setLineDash([12 * scale, 8 * scale]);
+    context.lineWidth = Math.max(2, 3 * scale);
+    context.strokeStyle = "rgba(95, 239, 255, 0.92)";
+    context.shadowBlur = 14 * scale;
+    context.shadowColor = "rgba(95, 239, 255, 0.8)";
+    context.beginPath();
+    context.moveTo(ballPoint.x, ballPoint.y);
+    context.lineTo(guideEnd.x, guideEnd.y);
+    context.stroke();
+    context.setLineDash([]);
+    context.beginPath();
+    context.arc(guideEnd.x, guideEnd.y, Math.max(3, 5 * scale), 0, Math.PI * 2);
+    context.fillStyle = "rgba(95, 239, 255, 0.95)";
+    context.fill();
+  }
+
   context.strokeStyle = "rgba(255, 255, 255, 0.36)";
+  context.shadowBlur = 0;
   context.beginPath();
   context.moveTo(ballPoint.x, ballPoint.y);
   context.lineTo(pointerPoint.x, pointerPoint.y);
   context.stroke();
   context.restore();
+}
+
+function getAimProjectionEnd(ball: Vector2, direction: Vector2, hole: MiniGolfHole): Vector2 {
+  if (direction.x === 0 && direction.y === 0) {
+    return ball;
+  }
+
+  let distance = getBoundaryProjectionDistance(ball, direction);
+
+  hole.walls.forEach((wall) => {
+    const wallDistance = getWallProjectionDistance(ball, direction, wall);
+
+    if (wallDistance !== null && wallDistance < distance) {
+      distance = wallDistance;
+    }
+  });
+
+  const cappedDistance = Math.max(0, Math.min(distance, 900));
+  return {
+    x: ball.x + direction.x * cappedDistance,
+    y: ball.y + direction.y * cappedDistance,
+  };
+}
+
+function getBoundaryProjectionDistance(ball: Vector2, direction: Vector2): number {
+  const distances: number[] = [];
+
+  if (direction.x > 0) {
+    distances.push((COURSE_WIDTH - BALL_RADIUS - ball.x) / direction.x);
+  } else if (direction.x < 0) {
+    distances.push((BALL_RADIUS - ball.x) / direction.x);
+  }
+
+  if (direction.y > 0) {
+    distances.push((COURSE_HEIGHT - BALL_RADIUS - ball.y) / direction.y);
+  } else if (direction.y < 0) {
+    distances.push((BALL_RADIUS - ball.y) / direction.y);
+  }
+
+  return Math.min(...distances.filter((distance) => distance > 0));
+}
+
+function getWallProjectionDistance(ball: Vector2, direction: Vector2, wall: CourseWall): number | null {
+  const angle = -(wall.angle ?? 0);
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const localOrigin = rotatePoint({ x: ball.x - wall.x, y: ball.y - wall.y }, cos, sin);
+  const localDirection = rotatePoint(direction, cos, sin);
+  const bounds = {
+    minX: -wall.width / 2 - BALL_RADIUS,
+    maxX: wall.width / 2 + BALL_RADIUS,
+    minY: -wall.height / 2 - BALL_RADIUS,
+    maxY: wall.height / 2 + BALL_RADIUS,
+  };
+
+  let near = -Infinity;
+  let far = Infinity;
+
+  const xRange = getRayRange(localOrigin.x, localDirection.x, bounds.minX, bounds.maxX);
+  if (!xRange) {
+    return null;
+  }
+
+  near = Math.max(near, xRange.near);
+  far = Math.min(far, xRange.far);
+
+  const yRange = getRayRange(localOrigin.y, localDirection.y, bounds.minY, bounds.maxY);
+  if (!yRange) {
+    return null;
+  }
+
+  near = Math.max(near, yRange.near);
+  far = Math.min(far, yRange.far);
+
+  if (far < 0 || near > far) {
+    return null;
+  }
+
+  return near > 0 ? near : far;
+}
+
+function getRayRange(origin: number, direction: number, min: number, max: number): { near: number; far: number } | null {
+  if (Math.abs(direction) < 0.0001) {
+    return origin >= min && origin <= max ? { near: -Infinity, far: Infinity } : null;
+  }
+
+  const first = (min - origin) / direction;
+  const second = (max - origin) / direction;
+
+  return {
+    near: Math.min(first, second),
+    far: Math.max(first, second),
+  };
+}
+
+function rotatePoint(point: Vector2, cos: number, sin: number): Vector2 {
+  return {
+    x: point.x * cos - point.y * sin,
+    y: point.x * sin + point.y * cos,
+  };
 }
 
 function drawBall(
