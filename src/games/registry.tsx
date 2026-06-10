@@ -113,6 +113,26 @@ export const games: GameDefinition[] = [
     ),
   },
   {
+    id: "horse-racing",
+    name: "Horse Racing",
+    path: "/games/horse-racing",
+    description:
+      "Bet exacta tickets on a vintage tabletop horse race with changing odds, tiny mechanical horses, and casino-style payouts.",
+    playTime: "Table race",
+    status: "Live",
+    art: (
+      <div className="horse-card-art">
+        <span className="horse-card-track" />
+        <span className="horse-card-infield">DERBY</span>
+        <span className="horse-card-finish" />
+        <span className="horse-card-horse horse-card-horse--one">1</span>
+        <span className="horse-card-horse horse-card-horse--two">4</span>
+        <span className="horse-card-horse horse-card-horse--three">6</span>
+        <span className="horse-card-ticket">3-5</span>
+      </div>
+    ),
+  },
+  {
     id: "brave-buffalo",
     name: "Brave Buffalo",
     path: "/games/brave-buffalo",

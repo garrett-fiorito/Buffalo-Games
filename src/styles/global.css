@@ -165,7 +165,8 @@ a {
 .flappy-view,
 .brave-view,
 .roulette-view,
-.mini-golf-view {
+.mini-golf-view,
+.horse-view {
   display: grid;
   gap: 28px;
 }
@@ -862,6 +863,113 @@ h1 {
     radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.82), transparent 26%),
     #f7f2df;
   box-shadow: 0 0 16px rgba(255, 255, 255, 0.72);
+}
+
+.horse-card-art {
+  position: absolute;
+  inset: 24px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(215, 164, 72, 0.18), transparent 36%),
+    linear-gradient(145deg, rgba(72, 38, 19, 0.9), rgba(5, 5, 5, 0.56));
+}
+
+.horse-card-track {
+  position: absolute;
+  width: min(260px, 82%);
+  aspect-ratio: 1.68;
+  border: 18px solid #0b5a3b;
+  border-radius: 50%;
+  background: #080806;
+  box-shadow:
+    0 0 0 4px rgba(215, 164, 72, 0.62),
+    inset 0 0 0 3px rgba(246, 234, 208, 0.16),
+    0 22px 42px rgba(0, 0, 0, 0.38);
+}
+
+.horse-card-infield {
+  position: absolute;
+  display: grid;
+  width: 116px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(215, 164, 72, 0.5);
+  border-radius: 4px;
+  color: var(--color-gold-bright);
+  background: rgba(5, 5, 5, 0.72);
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+
+.horse-card-finish {
+  position: absolute;
+  right: 44px;
+  top: 82px;
+  width: 10px;
+  height: 78px;
+  background:
+    repeating-linear-gradient(180deg, #f6ead0 0 10px, #c7463a 10px 20px);
+  box-shadow: 0 0 14px rgba(246, 234, 208, 0.34);
+}
+
+.horse-card-horse {
+  position: absolute;
+  display: grid;
+  width: 44px;
+  height: 28px;
+  place-items: center;
+  border-radius: 7px 12px 12px 7px;
+  color: #050505;
+  font-size: 0.88rem;
+  font-weight: 950;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
+}
+
+.horse-card-horse::after {
+  position: absolute;
+  right: -10px;
+  top: -4px;
+  width: 18px;
+  height: 18px;
+  content: "";
+  border-radius: 50%;
+  background: inherit;
+}
+
+.horse-card-horse--one {
+  right: 76px;
+  top: 74px;
+  background: #d83b3b;
+}
+
+.horse-card-horse--two {
+  left: 54px;
+  bottom: 80px;
+  background: #35ff84;
+}
+
+.horse-card-horse--three {
+  right: 112px;
+  bottom: 60px;
+  background: #c46cff;
+}
+
+.horse-card-ticket {
+  position: absolute;
+  left: 18px;
+  top: 22px;
+  display: grid;
+  width: 76px;
+  height: 50px;
+  place-items: center;
+  border: 1px dashed rgba(5, 5, 5, 0.42);
+  border-radius: 4px;
+  color: #090806;
+  background: #f6ead0;
+  font-weight: 950;
+  transform: rotate(-8deg);
 }
 
 .game-card__body {
@@ -2083,6 +2191,194 @@ body.mini-golf-game-active {
   font-size: 0.68rem;
 }
 
+.horse-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.36fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.horse-table-shell {
+  position: relative;
+  display: grid;
+  min-height: 560px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(215, 164, 72, 0.38);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 48%, rgba(215, 164, 72, 0.14), transparent 42%),
+    #050505;
+  box-shadow: var(--shadow-soft);
+}
+
+.horse-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 170px);
+  min-height: 520px;
+  border-radius: var(--radius);
+}
+
+.horse-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(215, 164, 72, 0.1), transparent 36%),
+    var(--color-panel);
+}
+
+.horse-panel h2 {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0;
+}
+
+.horse-panel p {
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.horse-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.horse-selector > div {
+  display: grid;
+  gap: 7px;
+}
+
+.horse-selector > div > span,
+.horse-bet-control label {
+  color: var(--color-gold-bright);
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.horse-selector button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.32);
+  font-weight: 950;
+}
+
+.horse-selector button.active {
+  border-color: rgba(240, 198, 106, 0.68);
+  background: rgba(215, 164, 72, 0.14);
+}
+
+.horse-selector i {
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(246, 234, 208, 0.5);
+  border-radius: 50%;
+}
+
+.horse-bet-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.horse-bet-control label,
+.horse-bet-control input {
+  grid-column: 1 / -1;
+}
+
+.horse-bet-control strong {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  color: var(--color-cream);
+}
+
+.horse-ticket-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(215, 164, 72, 0.36);
+  border-radius: var(--radius);
+  background: rgba(215, 164, 72, 0.08);
+}
+
+.horse-ticket-preview span,
+.horse-ticket-preview strong {
+  font-weight: 950;
+}
+
+.horse-ticket-preview strong {
+  color: var(--color-gold-bright);
+  font-size: 1.2rem;
+}
+
+.horse-tickets,
+.horse-odds-board {
+  display: grid;
+  gap: 8px;
+}
+
+.horse-tickets span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-muted);
+  background: rgba(5, 5, 5, 0.26);
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.horse-tickets strong {
+  color: var(--color-cream);
+}
+
+.horse-odds-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.horse-odds-board button {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(246, 234, 208, 0.16);
+  border-radius: 6px;
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.28);
+  font-weight: 900;
+}
+
+.horse-odds-board button:hover:not(:disabled) {
+  border-color: rgba(215, 164, 72, 0.5);
+  background: rgba(215, 164, 72, 0.1);
+}
+
+.horse-odds-board strong {
+  color: var(--color-gold-bright);
+}
+
 .billiards-panel h2 {
   margin-bottom: 10px;
   font-family: var(--font-display);
@@ -2374,6 +2670,7 @@ input[type="range"] {
   .flappy-layout,
   .brave-layout,
   .mini-golf-layout,
+  .horse-layout,
   .roulette-layout {
     grid-template-columns: 1fr;
   }
@@ -2467,6 +2764,14 @@ input[type="range"] {
     min-height: 360px;
   }
 
+  .horse-table-shell {
+    min-height: 380px;
+  }
+
+  .horse-canvas {
+    min-height: 360px;
+  }
+
   .roulette-wheel {
     width: 310px;
     height: 310px;
@@ -2544,7 +2849,8 @@ input[type="range"] {
   }
 
   .roulette-table-panel,
-  .roulette-wheel-panel {
+  .roulette-wheel-panel,
+  .horse-panel {
     padding: 12px;
   }
 
@@ -2559,6 +2865,11 @@ input[type="range"] {
 
   .roulette-outside-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .horse-selector,
+  .horse-odds-board {
+    grid-template-columns: 1fr;
   }
 
   .billiards-stats {
