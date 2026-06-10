@@ -5,6 +5,7 @@ import {
   COURSE_WIDTH,
   CUP_RADIUS,
   CUP_CAPTURE_SPEED,
+  MAX_PULL_DISTANCE,
   findHazard,
   getAimPower,
   getScoreLabel,
@@ -46,6 +47,17 @@ describe("mini golf course", () => {
         expect(getDistanceToRect(hole.start, hazard)).toBeGreaterThan(minimumClearance);
         expect(getDistanceToRect(hole.cup, hazard)).toBeGreaterThan(minimumClearance);
       });
+    });
+  });
+
+  it("keeps tees far enough from course edges for full-power pullbacks", () => {
+    const minimumTeeClearance = MAX_PULL_DISTANCE + BALL_RADIUS;
+
+    miniGolfHoles.forEach((hole) => {
+      expect(hole.start.x).toBeGreaterThanOrEqual(minimumTeeClearance);
+      expect(hole.start.y).toBeGreaterThanOrEqual(minimumTeeClearance);
+      expect(COURSE_WIDTH - hole.start.x).toBeGreaterThanOrEqual(minimumTeeClearance);
+      expect(COURSE_HEIGHT - hole.start.y).toBeGreaterThanOrEqual(minimumTeeClearance);
     });
   });
 

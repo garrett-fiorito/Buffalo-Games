@@ -14,7 +14,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     id: "starter",
     name: "Neon Starter",
     par: 2,
-    start: { x: 118, y: 512 },
+    start: { x: 220, y: 400 },
     cup: { x: 864, y: 112 },
     walls: [
       { id: "starter-top-bumper", x: 390, y: 178, width: 310, height: 28, angle: -0.2 },
@@ -30,7 +30,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     id: "canal",
     name: "Glow Canal",
     par: 3,
-    start: { x: 120, y: 300 },
+    start: { x: 230, y: 300 },
     cup: { x: 888, y: 300 },
     walls: [
       { id: "canal-left-gate", x: 356, y: 198, width: 34, height: 185 },
@@ -48,7 +48,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     id: "arcade-gate",
     name: "Arcade Gate",
     par: 3,
-    start: { x: 126, y: 520 },
+    start: { x: 230, y: 400 },
     cup: { x: 854, y: 92 },
     walls: [
       { id: "gate-left-rail", x: 322, y: 340, width: 30, height: 250, angle: -0.42 },
