@@ -479,7 +479,7 @@ function drawShip(context: CanvasRenderingContext2D, ship: MoonShip, cameraX: nu
 
 function drawCanvasHud(context: CanvasRenderingContext2D, state: MoonLandingState) {
   context.fillStyle = "rgba(5, 5, 5, 0.58)";
-  roundRect(context, 18, 18, 240, 80, 8);
+  roundRect(context, 18, 18, 292, 124, 8);
   context.fill();
   context.fillStyle = "#f6ead0";
   context.font = "900 20px Inter, system-ui, sans-serif";
@@ -487,6 +487,8 @@ function drawCanvasHud(context: CanvasRenderingContext2D, state: MoonLandingStat
   context.fillStyle = "#f0c66a";
   context.font = "900 13px Inter, system-ui, sans-serif";
   context.fillText(`PLANET ${state.planetIndex}`, 36, 72);
+  drawHudBar(context, "FUEL", state.fuel / MAX_FUEL, 36, 88, "#35ff84");
+  drawHudBar(context, "HEALTH", state.health / MAX_HEALTH, 36, 114, "#ff7a68");
 
   if (state.phase !== "playing") {
     context.fillStyle = "rgba(5, 5, 5, 0.72)";
@@ -501,6 +503,28 @@ function drawCanvasHud(context: CanvasRenderingContext2D, state: MoonLandingStat
     context.fillText(state.phase === "gameOver" ? state.message : "Arrow keys to thrust and steer.", MOON_WIDTH / 2, 292);
     context.textAlign = "left";
   }
+}
+
+function drawHudBar(
+  context: CanvasRenderingContext2D,
+  label: string,
+  value: number,
+  x: number,
+  y: number,
+  color: string,
+) {
+  const width = 184;
+  const height = 9;
+  const clamped = Math.max(0, Math.min(1, value));
+  context.fillStyle = "#b9c1b8";
+  context.font = "900 11px Inter, system-ui, sans-serif";
+  context.fillText(label, x, y + 8);
+  context.fillStyle = "rgba(246, 234, 208, 0.14)";
+  roundRect(context, x + 68, y, width, height, 5);
+  context.fill();
+  context.fillStyle = color;
+  roundRect(context, x + 68, y, width * clamped, height, 5);
+  context.fill();
 }
 
 function getMoonStatusTitle(state: MoonLandingState): string {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ASTEROID_DAMAGE,
+  GAS_STATION_SPACING,
   MAX_FUEL,
   MAX_HEALTH,
   MOON_GROUND_Y,
@@ -40,6 +41,14 @@ describe("moonLandingEngine", () => {
     expect(next.fuel).toBeLessThan(MAX_FUEL);
   });
 
+  it("spaces gas stations farther apart for larger sectors", () => {
+    const stations = createInitialMoonLandingState().gasStations;
+
+    stations.slice(1).forEach((station, index) => {
+      expect(station.x - stations[index].x).toBeGreaterThanOrEqual(GAS_STATION_SPACING);
+    });
+  });
+
   it("refuels and restores health to halfway on a safe gas station landing", () => {
     const station = createInitialMoonLandingState().gasStations[0];
     const playing = {
@@ -57,6 +66,21 @@ describe("moonLandingEngine", () => {
     expect(isSafeLanding(next.ship)).toBe(true);
     expect(next.fuel).toBe(MAX_FUEL);
     expect(next.health).toBe(MAX_HEALTH / 2);
+  });
+
+  it("allows the ship to take off after landing on a fuel station", () => {
+    const station = createInitialMoonLandingState().gasStations[0];
+    const playing = {
+      ...startMoonLanding(createInitialMoonLandingState()),
+      ship: {
+        position: { x: station.x + station.width / 2, y: station.y - SHIP_HEIGHT / 2 },
+        velocity: { x: 0, y: 0 },
+      },
+    };
+    const next = stepMoonLanding(playing, 32, { left: false, right: false, up: true });
+
+    expect(next.ship.position.y).toBeLessThan(playing.ship.position.y);
+    expect(next.ship.velocity.y).toBeLessThan(0);
   });
 
   it("damages health when colliding with asteroids", () => {

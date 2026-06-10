@@ -7,14 +7,15 @@ export const SHIP_WIDTH = 44;
 export const SHIP_HEIGHT = 58;
 export const MAX_FUEL = 100;
 export const MAX_HEALTH = 100;
-export const PLANET_DISTANCE = 3000;
+export const PLANET_DISTANCE = 6000;
+export const GAS_STATION_SPACING = 1450;
 export const GRAVITY = 360;
-export const THRUST_ACCELERATION = 680;
-export const SIDE_ACCELERATION = 430;
-export const DRAG = 0.988;
-export const MAX_HORIZONTAL_SPEED = 330;
+export const THRUST_ACCELERATION = 760;
+export const SIDE_ACCELERATION = 620;
+export const DRAG = 0.992;
+export const MAX_HORIZONTAL_SPEED = 520;
 export const MAX_VERTICAL_SPEED = 520;
-export const FUEL_DRAIN_PER_SECOND = 16;
+export const FUEL_DRAIN_PER_SECOND = 13;
 export const SAFE_LANDING_SPEED = 115;
 export const SAFE_HORIZONTAL_SPEED = 105;
 export const LANDING_DAMAGE = 18;
@@ -123,21 +124,25 @@ export function stepMoonLanding(
   if (landingStation) {
     const safeLanding = isSafeLanding(ship);
     const roughLanding = Math.abs(velocityY) > SAFE_LANDING_SPEED || Math.abs(velocityX) > SAFE_HORIZONTAL_SPEED;
-    y = landingStation.y - SHIP_HEIGHT / 2;
-    velocityY = 0;
-    velocityX *= 0.45;
-    ship = { position: { x, y }, velocity: { x: velocityX, y: velocityY } };
+    const takingOff = thrusting && velocityY < 0;
 
-    if (safeLanding) {
-      fuel = MAX_FUEL;
-      health = Math.max(health, MAX_HEALTH / 2);
-      gasStations = gasStations.map((station) =>
-        station.id === landingStation.id ? { ...station, used: true } : station,
-      );
-      message = "Refueled. Health restored to at least 50%.";
-    } else if (roughLanding) {
-      health = Math.max(0, health - LANDING_DAMAGE);
-      message = "Rough landing. Slow down before touching pads.";
+    if (!takingOff) {
+      y = landingStation.y - SHIP_HEIGHT / 2;
+      velocityY = 0;
+      velocityX *= 0.45;
+      ship = { position: { x, y }, velocity: { x: velocityX, y: velocityY } };
+
+      if (safeLanding) {
+        fuel = MAX_FUEL;
+        health = Math.max(health, MAX_HEALTH / 2);
+        gasStations = gasStations.map((station) =>
+          station.id === landingStation.id ? { ...station, used: true } : station,
+        );
+        message = "Refueled. Hold thrust to lift off.";
+      } else if (roughLanding) {
+        health = Math.max(0, health - LANDING_DAMAGE);
+        message = "Rough landing. Slow down before touching pads.";
+      }
     }
   } else if (y + SHIP_HEIGHT / 2 >= MOON_GROUND_Y) {
     const hardImpact = Math.abs(velocityY) > SAFE_LANDING_SPEED || Math.abs(velocityX) > SAFE_HORIZONTAL_SPEED * 1.35;
@@ -246,7 +251,9 @@ export function createAsteroids(seedOffset: number): MoonAsteroid[] {
 }
 
 export function createGasStations(seedOffset: number): MoonGasStation[] {
-  return Array.from({ length: 5 }, (_, index) => createGasStation(index, 760 + seedOffset + index * 640));
+  return Array.from({ length: 5 }, (_, index) =>
+    createGasStation(index, 1180 + seedOffset + index * GAS_STATION_SPACING),
+  );
 }
 
 function createAsteroid(id: number, x: number): MoonAsteroid {
@@ -293,7 +300,7 @@ function recycleGasStations(stations: MoonGasStation[], shipX: number): MoonGasS
       return station;
     }
 
-    return createGasStation(station.id + stations.length, farthest + 520 + index * 34);
+    return createGasStation(station.id + stations.length, farthest + GAS_STATION_SPACING + index * 46);
   });
 }
 

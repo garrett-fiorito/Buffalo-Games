@@ -52,7 +52,7 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <Bird size={17} aria-hidden="true" />
-            Flappy
+            Flappy Buffalo
           </NavLink>
           <NavLink
             to="/games/roulette"
