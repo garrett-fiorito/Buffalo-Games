@@ -70,6 +70,49 @@ export const games: GameDefinition[] = [
     ),
   },
   {
+    id: "roulette",
+    name: "Double Zero Roulette",
+    path: "/games/roulette",
+    description:
+      "Play American double-zero roulette with a polished wheel, casino felt betting table, chip rack, and accurate payouts.",
+    playTime: "Casino",
+    status: "Live",
+    art: (
+      <div className="roulette-card-art">
+        <span className="roulette-card-wheel">
+          <span>0</span>
+          <span>00</span>
+          <span>17</span>
+          <span>32</span>
+        </span>
+        <span className="roulette-card-ball" />
+        <span className="roulette-card-chip roulette-card-chip--one">25</span>
+        <span className="roulette-card-chip roulette-card-chip--two">100</span>
+      </div>
+    ),
+  },
+  {
+    id: "mini-golf",
+    name: "Neon Mini Golf",
+    path: "/games/mini-golf",
+    description:
+      "Play a polished 3-hole neon mini golf course with arcade aiming, par scoring, and water or sand penalties.",
+    playTime: "3 holes",
+    status: "Live",
+    art: (
+      <div className="mini-golf-card-art">
+        <span className="mini-golf-card-fairway" />
+        <span className="mini-golf-card-wall mini-golf-card-wall--one" />
+        <span className="mini-golf-card-wall mini-golf-card-wall--two" />
+        <span className="mini-golf-card-hazard mini-golf-card-hazard--water" />
+        <span className="mini-golf-card-hazard mini-golf-card-hazard--sand" />
+        <span className="mini-golf-card-cup" />
+        <span className="mini-golf-card-flag" />
+        <span className="mini-golf-card-ball" />
+      </div>
+    ),
+  },
+  {
     id: "brave-buffalo",
     name: "Brave Buffalo",
     path: "/games/brave-buffalo",
@@ -94,28 +137,6 @@ export const games: GameDefinition[] = [
           <span className="brave-card-runner-eye brave-card-runner-eye--right" />
           <span className="brave-card-runner-snout" />
         </span>
-      </div>
-    ),
-  },
-  {
-    id: "roulette",
-    name: "Double Zero Roulette",
-    path: "/games/roulette",
-    description:
-      "Play American double-zero roulette with a polished wheel, casino felt betting table, chip rack, and accurate payouts.",
-    playTime: "Casino",
-    status: "Live",
-    art: (
-      <div className="roulette-card-art">
-        <span className="roulette-card-wheel">
-          <span>0</span>
-          <span>00</span>
-          <span>17</span>
-          <span>32</span>
-        </span>
-        <span className="roulette-card-ball" />
-        <span className="roulette-card-chip roulette-card-chip--one">25</span>
-        <span className="roulette-card-chip roulette-card-chip--two">100</span>
       </div>
     ),
   },
