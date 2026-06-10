@@ -1,5 +1,6 @@
 import type {
-  ExactaBet,
+  HorseBet,
+  HorseBetKind,
   HorseDefinition,
   HorseId,
   HorseRaceResult,
@@ -10,7 +11,7 @@ import type {
 export const STARTING_HORSE_CHIPS = 1000;
 export const MIN_HORSE_BET = 5;
 export const MAX_HORSE_BET = 100;
-export const RACE_DURATION_MS = 6200;
+export const RACE_DURATION_MS = 31000;
 
 export const horses: HorseDefinition[] = [
   { id: 1, name: "Lucky Comet", color: "#d83b3b", rating: 91 },
@@ -25,8 +26,9 @@ export function createInitialHorseRaceState(): HorseRaceState {
   return {
     chips: STARTING_HORSE_CHIPS,
     phase: "betting",
+    selectedKind: "winner",
     selectedFirst: 1,
-    selectedSecond: 2,
+    selectedSecond: undefined,
     betAmount: 10,
     bets: [],
     raceNumber: 0,
@@ -41,37 +43,34 @@ export function setHorseBetAmount(state: HorseRaceState, amount: number): HorseR
   };
 }
 
-export function selectExactaHorse(
+export function selectHorseBet(
   state: HorseRaceState,
-  position: "first" | "second",
-  horseId: HorseId,
+  kind: HorseBetKind,
+  first: HorseId,
+  second?: HorseId,
 ): HorseRaceState {
-  if (position === "first") {
-    return {
-      ...state,
-      selectedFirst: horseId,
-      selectedSecond: state.selectedSecond === horseId ? getNextHorse(horseId) : state.selectedSecond,
-    };
-  }
-
   return {
     ...state,
-    selectedSecond: horseId,
-    selectedFirst: state.selectedFirst === horseId ? getNextHorse(horseId) : state.selectedFirst,
+    selectedKind: kind,
+    selectedFirst: first,
+    selectedSecond: kind === "exacta" ? second : undefined,
   };
 }
 
-export function placeExactaBet(state: HorseRaceState): HorseRaceState {
+export function placeHorseBet(state: HorseRaceState): HorseRaceState {
   if (
     state.phase === "racing" ||
-    state.selectedFirst === state.selectedSecond ||
+    (state.selectedKind === "exacta" && (!state.selectedSecond || state.selectedFirst === state.selectedSecond)) ||
     state.betAmount > state.chips
   ) {
     return state;
   }
 
-  const odds = getExactaOdds(state.selectedFirst, state.selectedSecond, state.raceNumber);
-  const id = `${state.raceNumber}-${state.selectedFirst}-${state.selectedSecond}-${state.bets.length}`;
+  const odds =
+    state.selectedKind === "winner"
+      ? getWinnerOdds(state.selectedFirst, state.raceNumber)
+      : getExactaOdds(state.selectedFirst, state.selectedSecond as HorseId, state.raceNumber);
+  const id = `${state.raceNumber}-${state.selectedKind}-${state.selectedFirst}-${state.selectedSecond ?? "win"}-${state.bets.length}`;
 
   return {
     ...state,
@@ -82,6 +81,7 @@ export function placeExactaBet(state: HorseRaceState): HorseRaceState {
       ...state.bets,
       {
         id,
+        kind: state.selectedKind,
         first: state.selectedFirst,
         second: state.selectedSecond,
         amount: state.betAmount,
@@ -128,9 +128,11 @@ export function finishHorseRace(state: HorseRaceState, finishOrder: HorseId[]): 
   };
 }
 
-export function settleHorseRace(bets: ExactaBet[], finishOrder: HorseId[]): HorseRaceResult {
+export function settleHorseRace(bets: HorseBet[], finishOrder: HorseId[]): HorseRaceResult {
   const [first, second] = finishOrder;
-  const winningBets = bets.filter((bet) => bet.first === first && bet.second === second);
+  const winningBets = bets.filter((bet) =>
+    bet.kind === "winner" ? bet.first === first : bet.first === first && bet.second === second,
+  );
   const totalReturn = winningBets.reduce((sum, bet) => sum + bet.amount * bet.odds, 0);
   const totalBet = bets.reduce((sum, bet) => sum + bet.amount, 0);
 
@@ -144,9 +146,10 @@ export function settleHorseRace(bets: ExactaBet[], finishOrder: HorseId[]): Hors
 
 export function createRacePlan(raceNumber: number): RacePlanEntry[] {
   const scored = horses.map((horse, index) => {
-    const variance = seededNoise(raceNumber, horse.id) * 26;
-    const fatigue = ((raceNumber + horse.id * 3) % 5) * 2.8;
-    const score = horse.rating + variance - fatigue;
+    const variance = seededNoise(raceNumber, horse.id) * 92;
+    const tripChaos = seededNoise(raceNumber + horse.id * 13, horse.id + 7) * 28;
+    const fatigue = ((raceNumber + horse.id * 3) % 5) * 4.2;
+    const score = horse.rating * 0.24 + variance + tripChaos - fatigue;
 
     return {
       horse,
@@ -162,7 +165,7 @@ export function createRacePlan(raceNumber: number): RacePlanEntry[] {
     return {
       horseId: horse.id,
       lane: index,
-      finishTimeMs: 4300 + rank * 245 + seededNoise(raceNumber + 11, horse.id) * 180,
+      finishTimeMs: 22600 + rank * 920 + seededNoise(raceNumber + 11, horse.id) * 1350,
       surge: seededNoise(raceNumber + 23, horse.id),
     };
   });
@@ -180,14 +183,28 @@ export function getExactaOdds(first: HorseId, second: HorseId, raceNumber: numbe
   const firstHorse = getHorse(first);
   const secondHorse = getHorse(second);
   const favoritePressure = (firstHorse.rating + secondHorse.rating) / 2;
-  const longshotBonus = Math.max(0, 90 - favoritePressure) / 3.2;
-  const boardWobble = Math.floor(seededNoise(raceNumber + first * 5, second) * 5);
+  const longshotBonus = Math.max(0, 92 - favoritePressure) / 2.2;
+  const boardWobble = Math.floor(seededNoise(raceNumber + first * 5, second) * 8);
 
-  return clamp(Math.round(5 + longshotBonus + boardWobble + Math.abs(first - second) * 0.7), 4, 28);
+  return clamp(Math.round(9 + longshotBonus + boardWobble + Math.abs(first - second) * 1.1), 8, 45);
 }
 
-export function getOddsBoard(raceNumber: number): ExactaBet[] {
-  const board: ExactaBet[] = [];
+export function getWinnerOdds(horseId: HorseId, raceNumber: number): number {
+  const horse = getHorse(horseId);
+  const longshotBonus = Math.max(0, 94 - horse.rating) / 7.5;
+  const boardWobble = Math.floor(seededNoise(raceNumber + 19, horseId) * 4);
+
+  return clamp(Math.round(4 + longshotBonus + boardWobble), 3, 12);
+}
+
+export function getBettingBoard(raceNumber: number): HorseBet[] {
+  const board: HorseBet[] = horses.map((horse) => ({
+    id: `board-winner-${horse.id}`,
+    kind: "winner",
+    first: horse.id,
+    amount: 0,
+    odds: getWinnerOdds(horse.id, raceNumber),
+  }));
 
   horses.forEach((first) => {
     horses.forEach((second) => {
@@ -196,7 +213,8 @@ export function getOddsBoard(raceNumber: number): ExactaBet[] {
       }
 
       board.push({
-        id: `board-${first.id}-${second.id}`,
+        id: `board-exacta-${first.id}-${second.id}`,
+        kind: "exacta",
         first: first.id,
         second: second.id,
         amount: 0,
@@ -205,7 +223,11 @@ export function getOddsBoard(raceNumber: number): ExactaBet[] {
     });
   });
 
-  return board.sort((a, b) => a.odds - b.odds).slice(0, 10);
+  return board;
+}
+
+export function getOddsBoard(raceNumber: number): HorseBet[] {
+  return getBettingBoard(raceNumber);
 }
 
 export function getHorse(id: HorseId): HorseDefinition {
@@ -216,10 +238,6 @@ export function getHorse(id: HorseId): HorseDefinition {
   }
 
   return horse;
-}
-
-function getNextHorse(horseId: HorseId): HorseId {
-  return (((horseId % horses.length) + 1) as HorseId);
 }
 
 function seededNoise(raceNumber: number, horseId: number): number {

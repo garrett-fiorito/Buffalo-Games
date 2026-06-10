@@ -14,13 +14,13 @@ export function App() {
     <SiteLayout>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/games/blackjack" element={<BlackjackPage />} />
         <Route path="/games/billiards" element={<BilliardsPage />} />
-        <Route path="/games/flappy-buffalo" element={<FlappyBuffaloPage />} />
+        <Route path="/games/blackjack" element={<BlackjackPage />} />
         <Route path="/games/brave-buffalo" element={<BraveBuffaloPage />} />
         <Route path="/games/roulette" element={<RoulettePage />} />
-        <Route path="/games/mini-golf" element={<MiniGolfPage />} />
+        <Route path="/games/flappy-buffalo" element={<FlappyBuffaloPage />} />
         <Route path="/games/horse-racing" element={<HorseRacingPage />} />
+        <Route path="/games/mini-golf" element={<MiniGolfPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SiteLayout>

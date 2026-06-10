@@ -10,16 +10,14 @@ import {
   createInitialHorseRaceState,
   createRacePlan,
   finishHorseRace,
-  getExactaOdds,
+  getBettingBoard,
   getFinishOrder,
   getHorse,
-  getOddsBoard,
-  horses,
-  placeExactaBet,
-  selectExactaHorse,
+  placeHorseBet,
+  selectHorseBet,
   setHorseBetAmount,
 } from "./horseRacingEngine";
-import type { HorseId, HorseRaceState, RacePlanEntry } from "./horseRacingTypes";
+import type { HorseBet, HorseId, HorseRaceState, RacePlanEntry } from "./horseRacingTypes";
 
 const TABLE_WIDTH = 1040;
 const TABLE_HEIGHT = 640;
@@ -35,8 +33,13 @@ export function HorseRacingPage() {
   const [elapsedMs, setElapsedMs] = useState(0);
 
   const totalBet = state.bets.reduce((sum, bet) => sum + bet.amount, 0);
-  const selectedOdds = getExactaOdds(state.selectedFirst, state.selectedSecond, state.raceNumber);
-  const oddsBoard = useMemo(() => getOddsBoard(state.raceNumber), [state.raceNumber]);
+  const bettingBoard = useMemo(() => getBettingBoard(state.raceNumber), [state.raceNumber]);
+  const selectedBoardBet = bettingBoard.find(
+    (bet) =>
+      bet.kind === state.selectedKind &&
+      bet.first === state.selectedFirst &&
+      bet.second === state.selectedSecond,
+  ) ?? bettingBoard[0];
   const finishOrder = state.lastResult?.finishOrder ?? getFinishOrder(racePlan);
 
   const updateState = useCallback((updater: (current: HorseRaceState) => HorseRaceState) => {
@@ -131,28 +134,9 @@ export function HorseRacingPage() {
 
         <aside className="horse-panel" aria-label="Horse racing controls">
           <div>
-            <p className="eyebrow">Table exacta</p>
+            <p className="eyebrow">Table wagers</p>
             <h2>{getStatusTitle(state)}</h2>
             <p>{getStatusMessage(state, finishOrder)}</p>
-          </div>
-
-          <div className="horse-selector" aria-label="Exacta selector">
-            <HorsePickColumn
-              title="1st"
-              selected={state.selectedFirst}
-              disabled={state.phase === "racing"}
-              onPick={(horseId) =>
-                updateState((current) => selectExactaHorse(current, "first", horseId))
-              }
-            />
-            <HorsePickColumn
-              title="2nd"
-              selected={state.selectedSecond}
-              disabled={state.phase === "racing"}
-              onPick={(horseId) =>
-                updateState((current) => selectExactaHorse(current, "second", horseId))
-              }
-            />
           </div>
 
           <div className="horse-bet-control">
@@ -173,10 +157,8 @@ export function HorseRacingPage() {
           </div>
 
           <div className="horse-ticket-preview">
-            <span>
-              {state.selectedFirst}-{state.selectedSecond} exacta
-            </span>
-            <strong>{selectedOdds}x</strong>
+            <span>{getBetLabel(selectedBoardBet)}</span>
+            <strong>{selectedBoardBet.odds}x</strong>
           </div>
 
           <div className="action-row">
@@ -184,7 +166,7 @@ export function HorseRacingPage() {
               className="button button-primary"
               type="button"
               disabled={state.phase === "racing" || state.betAmount > state.chips}
-              onClick={() => updateState((current) => placeExactaBet(current))}
+              onClick={() => updateState((current) => placeHorseBet(current))}
             >
               <Ticket size={18} aria-hidden="true" />
               Ticket
@@ -215,7 +197,7 @@ export function HorseRacingPage() {
             {state.bets.length ? (
               state.bets.map((bet) => (
                 <span key={bet.id}>
-                  {bet.first}-{bet.second} <strong>{bet.amount} @ {bet.odds}x</strong>
+                  {getBetLabel(bet)} <strong>{bet.amount} @ {bet.odds}x</strong>
                 </span>
               ))
             ) : (
@@ -223,19 +205,24 @@ export function HorseRacingPage() {
             )}
           </div>
 
-          <div className="horse-odds-board" aria-label="Featured exacta odds">
-            {oddsBoard.map((bet) => (
+          <div className="horse-odds-board" aria-label="Winner and exacta odds">
+            {bettingBoard.map((bet) => (
               <button
                 key={bet.id}
+                className={
+                  selectedBoardBet.kind === bet.kind &&
+                  selectedBoardBet.first === bet.first &&
+                  selectedBoardBet.second === bet.second
+                    ? "active"
+                    : ""
+                }
                 type="button"
                 disabled={state.phase === "racing"}
                 onClick={() => {
-                  updateState((current) => ({
-                    ...selectExactaHorse(selectExactaHorse(current, "first", bet.first), "second", bet.second),
-                  }));
+                  updateState((current) => selectHorseBet(current, bet.kind, bet.first, bet.second));
                 }}
               >
-                <span>{bet.first}-{bet.second}</span>
+                <span>{getBetLabel(bet)}</span>
                 <strong>{bet.odds}x</strong>
               </button>
             ))}
@@ -243,36 +230,6 @@ export function HorseRacingPage() {
         </aside>
       </div>
     </section>
-  );
-}
-
-function HorsePickColumn({
-  title,
-  selected,
-  disabled,
-  onPick,
-}: {
-  title: string;
-  selected: HorseId;
-  disabled: boolean;
-  onPick: (horseId: HorseId) => void;
-}) {
-  return (
-    <div>
-      <span>{title}</span>
-      {horses.map((horse) => (
-        <button
-          key={horse.id}
-          className={selected === horse.id ? "active" : ""}
-          type="button"
-          disabled={disabled}
-          onClick={() => onPick(horse.id)}
-        >
-          <i style={{ background: horse.color }} />
-          {horse.id}
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -295,7 +252,7 @@ function getStatusTitle(state: HorseRaceState): string {
     return "Photo finish";
   }
 
-  return "Place exacta tickets";
+  return "Place your tickets";
 }
 
 function getStatusMessage(state: HorseRaceState, finishOrder: HorseId[]): string {
@@ -313,7 +270,11 @@ function getStatusMessage(state: HorseRaceState, finishOrder: HorseId[]): string
   }
 
   const [first, second] = finishOrder;
-  return `Pick the first two horses in exact order. Featured board opens with ${first}-${second} as the table favorite.`;
+  return `Pick a winner or an exacta from the board. Exacta tickets need the first two horses in order. Last board sample: ${first}-${second}.`;
+}
+
+function getBetLabel(bet: HorseBet): string {
+  return bet.kind === "winner" ? `${bet.first} winner` : `${bet.first}-${bet.second}`;
 }
 
 function drawHorseTable(

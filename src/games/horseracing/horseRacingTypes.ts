@@ -9,10 +9,13 @@ export type HorseDefinition = {
   rating: number;
 };
 
-export type ExactaBet = {
+export type HorseBetKind = "winner" | "exacta";
+
+export type HorseBet = {
   id: string;
+  kind: HorseBetKind;
   first: HorseId;
-  second: HorseId;
+  second?: HorseId;
   amount: number;
   odds: number;
 };
@@ -34,10 +37,11 @@ export type HorseRaceResult = {
 export type HorseRaceState = {
   chips: number;
   phase: HorseRacePhase;
+  selectedKind: HorseBetKind;
   selectedFirst: HorseId;
-  selectedSecond: HorseId;
+  selectedSecond?: HorseId;
   betAmount: number;
-  bets: ExactaBet[];
+  bets: HorseBet[];
   raceNumber: number;
   lastResult: HorseRaceResult | null;
 };

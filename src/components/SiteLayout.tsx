@@ -27,13 +27,6 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Lobby
           </NavLink>
           <NavLink
-            to="/games/blackjack"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            <Sparkles size={17} aria-hidden="true" />
-            Blackjack
-          </NavLink>
-          <NavLink
             to="/games/billiards"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
@@ -41,11 +34,18 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Billiards
           </NavLink>
           <NavLink
-            to="/games/flappy-buffalo"
+            to="/games/blackjack"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            <Bird size={17} aria-hidden="true" />
-            Flappy
+            <Sparkles size={17} aria-hidden="true" />
+            Blackjack
+          </NavLink>
+          <NavLink
+            to="/games/brave-buffalo"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <Rocket size={17} aria-hidden="true" />
+            Brave Buffalo
           </NavLink>
           <NavLink
             to="/games/roulette"
@@ -55,11 +55,11 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Roulette
           </NavLink>
           <NavLink
-            to="/games/mini-golf"
+            to="/games/flappy-buffalo"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            <Flag size={17} aria-hidden="true" />
-            Mini Golf
+            <Bird size={17} aria-hidden="true" />
+            Flappy
           </NavLink>
           <NavLink
             to="/games/horse-racing"
@@ -69,11 +69,11 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             Horse Racing
           </NavLink>
           <NavLink
-            to="/games/brave-buffalo"
+            to="/games/mini-golf"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            <Rocket size={17} aria-hidden="true" />
-            Brave Buffalo
+            <Flag size={17} aria-hidden="true" />
+            Mini Golf
           </NavLink>
         </nav>
       </header>
