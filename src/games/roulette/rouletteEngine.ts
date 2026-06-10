@@ -169,7 +169,7 @@ export function beginSpin(state: RouletteState): RouletteState {
 }
 
 export function finishSpin(state: RouletteState, pocket: RoulettePocket): RouletteState {
-  const result = settleBets(state.bets, pocket);
+  const result = settleBets(state.bets, pocket, getGoldenBallPocket(state.spinIndex));
 
   return {
     ...state,
@@ -185,10 +185,12 @@ export function finishSpin(state: RouletteState, pocket: RoulettePocket): Roulet
 export function settleBets(
   bets: RouletteBet[],
   pocket: RoulettePocket,
+  goldenPocket?: RoulettePocket,
 ): RouletteSpinResult {
+  const goldenHit = goldenPocket?.value === pocket.value;
   const winningBets = bets.filter((bet) => isWinningBet(bet, pocket));
   const totalReturn = winningBets.reduce(
-    (sum, bet) => sum + bet.amount * (getPayoutMultiplier(bet.kind) + 1),
+    (sum, bet) => sum + bet.amount * (getPayoutMultiplier(bet.kind, goldenHit) + 1),
     0,
   );
   const totalBet = getTotalBet(bets);
@@ -198,6 +200,8 @@ export function settleBets(
     totalReturn,
     net: totalReturn - totalBet,
     winningBets,
+    goldenPocket,
+    goldenHit,
   };
 }
 
@@ -235,9 +239,9 @@ export function isWinningBet(bet: RouletteBet, pocket: RoulettePocket): boolean 
   }
 }
 
-export function getPayoutMultiplier(kind: RouletteBetKind): number {
+export function getPayoutMultiplier(kind: RouletteBetKind, goldenHit = false): number {
   if (kind === "straight") {
-    return 35;
+    return goldenHit ? 50 : 35;
   }
 
   if (kind.startsWith("dozen") || kind.startsWith("column")) {
@@ -245,6 +249,17 @@ export function getPayoutMultiplier(kind: RouletteBetKind): number {
   }
 
   return 1;
+}
+
+export function getGoldenBallCandidates(spinIndex: number): RoulettePocket[] {
+  const startIndex = (spinIndex * 7 + 3) % rouletteWheel.length;
+
+  return [0, 1, 2, 3, 4].map((offset) => rouletteWheel[(startIndex + offset * 6) % rouletteWheel.length]);
+}
+
+export function getGoldenBallPocket(spinIndex: number): RoulettePocket {
+  const candidates = getGoldenBallCandidates(spinIndex);
+  return candidates[(spinIndex * 3 + 1) % candidates.length];
 }
 
 export function getTotalBet(bets: RouletteBet[]): number {

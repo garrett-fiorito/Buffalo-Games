@@ -6,6 +6,8 @@ import {
   clearBets,
   createInitialRouletteState,
   finishSpin,
+  getGoldenBallCandidates,
+  getGoldenBallPocket,
   getPocketColor,
   getTotalBet,
   placeBet,
@@ -65,6 +67,24 @@ describe("rouletteEngine", () => {
     const pocket: RoulettePocket = { value: "17", color: "black" };
 
     expect(settleBets(bets, pocket).totalReturn).toBe(360);
+  });
+
+  it("settles golden straight-up hits at 50:1 plus stake return", () => {
+    const goldenPocket = getGoldenBallPocket(0);
+    const bets: RouletteBet[] = [
+      {
+        id: `straight-${goldenPocket.value}`,
+        kind: "straight",
+        label: goldenPocket.value,
+        amount: 10,
+        number: goldenPocket.value,
+      },
+    ];
+    const result = settleBets(bets, goldenPocket, goldenPocket);
+
+    expect(getGoldenBallCandidates(0)).toContainEqual(goldenPocket);
+    expect(result.goldenHit).toBe(true);
+    expect(result.totalReturn).toBe(510);
   });
 
   it("settles outside, dozen, and column bets with correct returns", () => {

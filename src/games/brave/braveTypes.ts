@@ -8,6 +8,8 @@ export type ObstacleType =
   | "lowArch"
   | "rollingBarrel";
 
+export type CollectibleType = "coin" | "candy";
+
 export type BraveObstacle = {
   id: number;
   type: ObstacleType;
@@ -16,6 +18,21 @@ export type BraveObstacle = {
   width: number;
   height: number;
   nearMissed: boolean;
+  smashed?: boolean;
+};
+
+export type BraveCollectible = {
+  id: number;
+  type: CollectibleType;
+  x: number;
+  y: number;
+  radius: number;
+  collected: boolean;
+};
+
+export type BraveUpgrades = {
+  extraHeart: boolean;
+  helmet: boolean;
 };
 
 export type BraveState = {
@@ -28,4 +45,15 @@ export type BraveState = {
   speed: number;
   obstacles: BraveObstacle[];
   nextObstacleId: number;
+  collectibles: BraveCollectible[];
+  nextCollectibleId: number;
+  stampedeMeter: number;
+  stampedeMs: number;
+  stampedeBonusDistance: number;
+  smashedObstacles: number;
+  runCoins: number;
+  coins: number;
+  hearts: number;
+  maxHearts: number;
+  upgrades: BraveUpgrades;
 };

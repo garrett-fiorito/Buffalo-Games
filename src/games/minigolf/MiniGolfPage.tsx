@@ -381,6 +381,13 @@ export function MiniGolfPage() {
             <span>{currentHole.name}</span>
             <strong>Par {currentHole.par}</strong>
           </div>
+          <div className="mini-golf-field-power" aria-label="Putt power">
+            <span>Power</span>
+            <strong>{viewState.aimingPower}%</strong>
+            <div>
+              <span style={{ width: `${viewState.aimingPower}%` }} />
+            </div>
+          </div>
           <button
             className="mini-golf-fullscreen-button"
             type="button"

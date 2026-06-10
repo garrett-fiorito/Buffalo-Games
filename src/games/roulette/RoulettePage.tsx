@@ -9,6 +9,8 @@ import {
   clearBets,
   createInitialRouletteState,
   finishSpin,
+  getGoldenBallCandidates,
+  getGoldenBallPocket,
   getPocketColor,
   getTotalBet,
   placeBet,
@@ -61,6 +63,8 @@ export function RoulettePage() {
   const totalBet = getTotalBet(state.bets);
   const canSpin = state.phase !== "spinning" && state.bets.length > 0;
   const resultText = getResultText(state);
+  const goldenCandidates = getGoldenBallCandidates(state.spinIndex);
+  const goldenPocket = getGoldenBallPocket(state.spinIndex);
 
   const betLookup = useMemo(() => {
     return new Map(state.bets.map((bet) => [bet.id, bet.amount]));
@@ -140,8 +144,26 @@ export function RoulettePage() {
           </div>
 
           <div className="roulette-result" aria-live="polite">
-            <span>{state.phase === "spinning" ? "Wheel spinning" : "Result"}</span>
+            <span>{state.phase === "spinning" ? "Golden target revealed" : "Result"}</span>
             <strong>{resultText}</strong>
+          </div>
+
+          <div className="roulette-golden-panel" aria-label="Golden ball bonus">
+            <span>{state.phase === "spinning" ? "50x golden ball" : "Possible golden numbers"}</span>
+            <div>
+              {goldenCandidates.map((pocket) => (
+                <strong
+                  key={pocket.value}
+                  className={
+                    state.phase === "spinning" && pocket.value === goldenPocket.value
+                      ? "active"
+                      : ""
+                  }
+                >
+                  {pocket.value}
+                </strong>
+              ))}
+            </div>
           </div>
 
           <div className="roulette-history" aria-label="Last spins">
@@ -261,6 +283,7 @@ export function RoulettePage() {
 
           <p className="table-note">
             American double-zero roulette pays 35:1 on single numbers, 2:1 on dozens and columns, and 1:1 on outside bets.
+            Each spin also reveals one golden number from the preview row; a straight-up hit on it pays 50:1.
           </p>
         </div>
       </div>
@@ -330,8 +353,9 @@ function getResultText(state: RouletteState): string {
   }
 
   const { pocket, net } = state.lastResult;
+  const golden = state.lastResult.goldenHit ? " GOLDEN 50x" : "";
   const outcome = net > 0 ? `Won ${net}` : net === 0 ? "Pushed" : `Lost ${Math.abs(net)}`;
-  return `${pocket.value} ${pocket.color.toUpperCase()} - ${outcome} chips`;
+  return `${pocket.value} ${pocket.color.toUpperCase()}${golden} - ${outcome} chips`;
 }
 
 function pickSpinPocket(spinIndex: number): RoulettePocket {

@@ -3,9 +3,14 @@ import {
   BASE_SPEED,
   BRAVE_WIDTH,
   BUFFALO_X,
+  CANDY_METER_VALUE,
+  EXTRA_HEART_COST,
   FLOOR_Y,
+  STAMPEDE_METER_MAX,
   createInitialBraveState,
+  createCollectible,
   createObstacle,
+  purchaseBraveUpgrade,
   scriptedObstacleTypes,
   startBrave,
   stepBrave,
@@ -96,10 +101,73 @@ describe("braveEngine", () => {
     expect(stepBrave(state, 16, false).phase).toBe("gameOver");
   });
 
-  it("keeps scoring focused on distance only", () => {
+  it("collects coins and candy during a run", () => {
+    const coin = {
+      ...createCollectible(0, BUFFALO_X + 34),
+      y: FLOOR_Y - 34,
+    };
+    const candy = {
+      ...createCollectible(1, BUFFALO_X + 34),
+      y: FLOOR_Y - 34,
+    };
     const state = startBrave(createInitialBraveState());
+    const nextState = stepBrave(
+      {
+        ...state,
+        buffaloY: FLOOR_Y - 54,
+        collectibles: [coin, candy],
+        obstacles: [],
+      },
+      16,
+      false,
+    );
+
+    expect(nextState.runCoins).toBe(1);
+    expect(nextState.coins).toBe(1);
+    expect(nextState.stampedeMeter).toBe(CANDY_METER_VALUE);
+  });
+
+  it("activates stampede and smashes obstacles instead of ending the run", () => {
+    const obstacle = createObstacle(0, BUFFALO_X + 16);
+    const candy = {
+      ...createCollectible(1, BUFFALO_X + 34),
+      y: obstacle.y + 18,
+    };
+    const state = {
+      ...startBrave(createInitialBraveState()),
+      buffaloY: obstacle.y - 18,
+      stampedeMeter: STAMPEDE_METER_MAX - CANDY_METER_VALUE,
+      obstacles: [obstacle],
+      collectibles: [candy],
+    };
+
+    const nextState = stepBrave(state, 16, false);
+
+    expect(nextState.phase).toBe("playing");
+    expect(nextState.stampedeMs).toBeGreaterThan(0);
+    expect(nextState.obstacles[0].smashed).toBe(true);
+    expect(nextState.smashedObstacles).toBe(1);
+  });
+
+  it("lets upgrades add heart buffers", () => {
+    const state = {
+      ...createInitialBraveState(0, EXTRA_HEART_COST),
+    };
+    const upgraded = purchaseBraveUpgrade(state, "extraHeart");
+
+    expect(upgraded.coins).toBe(0);
+    expect(upgraded.upgrades.extraHeart).toBe(true);
+    expect(upgraded.maxHearts).toBe(2);
+    expect(upgraded.hearts).toBe(2);
+  });
+
+  it("adds stampede bonus distance to scoring", () => {
+    const state = {
+      ...startBrave(createInitialBraveState()),
+      stampedeMs: 1000,
+    };
     const nextState = stepBrave(state, 500, false);
 
-    expect(nextState.score).toBe(Math.floor(nextState.distance / 10));
+    expect(nextState.score).toBeGreaterThan(Math.floor(nextState.distance / 10));
   });
 });

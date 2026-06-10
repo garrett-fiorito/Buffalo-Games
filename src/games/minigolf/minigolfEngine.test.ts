@@ -84,6 +84,14 @@ describe("mini golf rules helpers", () => {
     expect(getAimPower({ x: 100, y: 100 }, { x: -300, y: 100 })).toBe(1);
   });
 
+  it("softens short putts for better tap-in control", () => {
+    const linearHalfPower = 0.5;
+    const easedPower = getAimPower({ x: 100, y: 100 }, { x: 5, y: 100 });
+
+    expect(easedPower).toBeLessThan(linearHalfPower);
+    expect(easedPower).toBeGreaterThan(0.35);
+  });
+
   it("treats tiny velocity as stopped", () => {
     expect(isVelocityStopped({ x: 0.02, y: 0.02 })).toBe(true);
     expect(isVelocityStopped({ x: 0.12, y: 0 })).toBe(false);

@@ -75,6 +75,8 @@ export type RouletteSpinResult = {
   totalReturn: number;
   net: number;
   winningBets: RouletteBet[];
+  goldenPocket?: RoulettePocket;
+  goldenHit: boolean;
 };
 
 export type RouletteState = {

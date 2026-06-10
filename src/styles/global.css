@@ -1342,6 +1342,99 @@ body.brave-game-active {
   line-height: 1.55;
 }
 
+.brave-run-stats,
+.brave-upgrades {
+  display: grid;
+  gap: 10px;
+}
+
+.brave-run-stats {
+  grid-template-columns: 1fr 1fr;
+}
+
+.brave-run-stats > div {
+  display: grid;
+  gap: 5px;
+  min-height: 66px;
+  padding: 10px;
+  border: 1px solid rgba(53, 255, 132, 0.22);
+  border-radius: var(--radius);
+  background: rgba(53, 255, 132, 0.06);
+}
+
+.brave-run-stats > div:first-child {
+  grid-column: 1 / -1;
+}
+
+.brave-run-stats span,
+.brave-upgrade-button small {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.brave-run-stats strong {
+  color: var(--color-cream);
+  font-size: 1rem;
+}
+
+.brave-meter,
+.brave-meter span {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.brave-meter {
+  overflow: hidden;
+  background: rgba(5, 5, 5, 0.52);
+}
+
+.brave-meter span {
+  background: linear-gradient(90deg, #ff4fa3, #f0c66a, #35ff84);
+  box-shadow: 0 0 16px rgba(240, 198, 106, 0.44);
+}
+
+.brave-upgrade-button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  padding: 11px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.3);
+  text-align: left;
+}
+
+.brave-upgrade-button svg {
+  color: var(--color-gold-bright);
+}
+
+.brave-upgrade-button span {
+  display: grid;
+  gap: 2px;
+}
+
+.brave-upgrade-button strong {
+  font-size: 0.92rem;
+}
+
+.brave-upgrade-button em {
+  grid-column: 1 / -1;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.brave-upgrade-button:hover:not(:disabled) {
+  border-color: rgba(240, 198, 106, 0.56);
+  background: rgba(240, 198, 106, 0.08);
+}
+
 .mini-golf-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.32fr);
@@ -1417,6 +1510,51 @@ body.mini-golf-game-active {
 
 .mini-golf-hud strong {
   font-size: 0.96rem;
+}
+
+.mini-golf-field-power {
+  position: absolute;
+  z-index: 4;
+  left: 12px;
+  bottom: 12px;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 5px 10px;
+  width: min(210px, calc(100% - 24px));
+  padding: 8px 10px;
+  border: 1px solid rgba(46, 255, 168, 0.3);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.68);
+}
+
+.mini-golf-field-power > span {
+  color: #2effa8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mini-golf-field-power strong {
+  justify-self: end;
+  font-size: 0.88rem;
+}
+
+.mini-golf-field-power div,
+.mini-golf-field-power div span {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.mini-golf-field-power div {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.mini-golf-field-power div span {
+  background: linear-gradient(90deg, #2effa8, #ffdc63, #ff29a6);
 }
 
 .mini-golf-fullscreen-button {
@@ -1730,6 +1868,55 @@ body.mini-golf-game-active {
 
 .roulette-result strong {
   font-size: 1rem;
+}
+
+.roulette-golden-panel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 420px);
+  padding: 13px;
+  border: 1px solid rgba(240, 198, 106, 0.42);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(240, 198, 106, 0.2), transparent 46%),
+    rgba(5, 5, 5, 0.42);
+}
+
+.roulette-golden-panel > span {
+  color: var(--color-gold-bright);
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.roulette-golden-panel div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.roulette-golden-panel strong {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid rgba(246, 234, 208, 0.38);
+  border-radius: 50%;
+  color: #090806;
+  background: linear-gradient(135deg, #fff1a8, #d7a448);
+  font-size: 0.85rem;
+  font-weight: 950;
+  box-shadow: 0 0 18px rgba(240, 198, 106, 0.28);
+}
+
+.roulette-golden-panel strong.active {
+  border-color: #fff7c9;
+  box-shadow:
+    0 0 22px rgba(240, 198, 106, 0.86),
+    0 0 42px rgba(240, 198, 106, 0.36);
+  transform: scale(1.08);
 }
 
 .roulette-history {

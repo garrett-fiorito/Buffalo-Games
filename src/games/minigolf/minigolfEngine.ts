@@ -6,7 +6,7 @@ export const BALL_RADIUS = 10;
 export const CUP_RADIUS = 19;
 export const CUP_CAPTURE_SPEED = 1.08;
 export const STOP_SPEED = 0.075;
-export const PUTT_SPEED_MULTIPLIER = 25;
+export const PUTT_SPEED_MULTIPLIER = 21;
 export const MAX_PULL_DISTANCE = 190;
 
 export const miniGolfHoles: MiniGolfHole[] = [
@@ -110,7 +110,8 @@ export function isInsideCourse(position: Vector2, margin = BALL_RADIUS): boolean
 }
 
 export function getAimPower(ball: Vector2, pointer: Vector2): number {
-  return Math.min(1, getDistance(ball, pointer) / MAX_PULL_DISTANCE);
+  const rawPower = Math.min(1, getDistance(ball, pointer) / MAX_PULL_DISTANCE);
+  return Math.pow(rawPower, 1.35);
 }
 
 export function getShotVector(ball: Vector2, pointer: Vector2): { direction: Vector2; power: number } {

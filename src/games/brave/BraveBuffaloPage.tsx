@@ -1,19 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import { ArrowLeft, Gauge, Maximize2, Minimize2, Play, RotateCcw, Trophy } from "lucide-react";
+import {
+  ArrowLeft,
+  Coins,
+  Gauge,
+  Heart,
+  HardHat,
+  Maximize2,
+  Minimize2,
+  Play,
+  RotateCcw,
+  Trophy,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   BRAVE_HEIGHT,
   BRAVE_WIDTH,
   BUFFALO_X,
+  EXTRA_HEART_COST,
   FLOOR_Y,
+  HELMET_COST,
   createInitialBraveState,
+  purchaseBraveUpgrade,
   startBrave,
   stepBrave,
 } from "./braveEngine";
-import type { BraveObstacle, BraveState } from "./braveTypes";
+import type { BraveCollectible, BraveObstacle, BraveState } from "./braveTypes";
 
 const bestScoreKey = "black-buffalo-brave-best";
+const coinBankKey = "black-buffalo-brave-coins";
+const upgradesKey = "black-buffalo-brave-upgrades";
 
 export function BraveBuffaloPage() {
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -21,7 +37,9 @@ export function BraveBuffaloPage() {
   const frameRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
   const inputHeldRef = useRef(false);
-  const stateRef = useRef<BraveState>(createInitialBraveState(readBestScore()));
+  const stateRef = useRef<BraveState>(
+    createInitialBraveState(readBestScore(), readCoinBank(), readUpgrades()),
+  );
   const [state, setState] = useState(stateRef.current);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -86,6 +104,9 @@ export function BraveBuffaloPage() {
     if (state.best > 0) {
       window.localStorage.setItem(bestScoreKey, String(state.best));
     }
+
+    window.localStorage.setItem(coinBankKey, String(state.coins));
+    window.localStorage.setItem(upgradesKey, JSON.stringify(state.upgrades));
   }, [state]);
 
   useEffect(() => {
@@ -146,6 +167,8 @@ export function BraveBuffaloPage() {
   const actionLabel =
     state.phase === "gameOver" ? "Restart run" : state.phase === "ready" ? "Start run" : "Flap";
   const actionIcon = state.phase === "gameOver" ? <RotateCcw size={18} /> : <Play size={18} />;
+  const stampedePercent = Math.round(state.stampedeMeter);
+  const isStampeding = state.stampedeMs > 0;
 
   return (
     <section className="brave-view" aria-labelledby="brave-title">
@@ -160,6 +183,7 @@ export function BraveBuffaloPage() {
         <div className="table-stats" aria-label="Brave Buffalo stats">
           <Stat label="Score" value={state.score} icon={<Gauge />} />
           <Stat label="Best" value={state.best} icon={<Trophy />} />
+          <Stat label="Coins" value={state.coins} icon={<Coins />} />
         </div>
       </div>
 
@@ -211,6 +235,25 @@ export function BraveBuffaloPage() {
             <h2>{getStatusTitle(state)}</h2>
             <p>{getStatusMessage(state)}</p>
           </div>
+          <div className="brave-run-stats" aria-label="Run stats">
+            <div>
+              <span>Stampede</span>
+              <strong>{isStampeding ? "Active" : `${stampedePercent}%`}</strong>
+              <div className="brave-meter">
+                <span style={{ width: `${isStampeding ? 100 : stampedePercent}%` }} />
+              </div>
+            </div>
+            <div>
+              <span>Hearts</span>
+              <strong>
+                {state.hearts}/{state.maxHearts}
+              </strong>
+            </div>
+            <div>
+              <span>Run coins</span>
+              <strong>{state.runCoins}</strong>
+            </div>
+          </div>
           <button
             className="button button-primary"
             type="button"
@@ -225,6 +268,26 @@ export function BraveBuffaloPage() {
             {actionIcon}
             {actionLabel}
           </button>
+          <div className="brave-upgrades" aria-label="Brave Buffalo upgrades">
+            <UpgradeButton
+              title="Extra heart"
+              description="Start each run with one more hit."
+              cost={EXTRA_HEART_COST}
+              owned={state.upgrades.extraHeart}
+              coins={state.coins}
+              icon={<Heart size={18} aria-hidden="true" />}
+              onClick={() => updateState((current) => purchaseBraveUpgrade(current, "extraHeart"))}
+            />
+            <UpgradeButton
+              title="Helmet"
+              description="Adds one more crash buffer."
+              cost={HELMET_COST}
+              owned={state.upgrades.helmet}
+              coins={state.coins}
+              icon={<HardHat size={18} aria-hidden="true" />}
+              onClick={() => updateState((current) => purchaseBraveUpgrade(current, "helmet"))}
+            />
+          </div>
         </aside>
       </div>
     </section>
@@ -247,6 +310,40 @@ function Stat({ label, value, icon }: StatProps) {
   );
 }
 
+function UpgradeButton({
+  title,
+  description,
+  cost,
+  owned,
+  coins,
+  icon,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  cost: number;
+  owned: boolean;
+  coins: number;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className="brave-upgrade-button"
+      type="button"
+      disabled={owned || coins < cost}
+      onClick={onClick}
+    >
+      {icon}
+      <span>
+        <strong>{title}</strong>
+        <small>{owned ? "Owned" : `${cost} coins`}</small>
+      </span>
+      <em>{description}</em>
+    </button>
+  );
+}
+
 function getStatusTitle(state: BraveState): string {
   if (state.phase === "gameOver") {
     return "Run over";
@@ -265,7 +362,9 @@ function getStatusMessage(state: BraveState): string {
   }
 
   if (state.phase === "playing") {
-    return "Release to drop, hold to rise, and avoid the red hazards.";
+    return state.stampedeMs > 0
+      ? "Stampede mode. Smash through red hazards while the herd is with you."
+      : "Collect candy to trigger stampede mode, grab coins, and avoid the red hazards.";
   }
 
   return "Hold the button, press Space, or touch the game to flap upward.";
@@ -288,9 +387,24 @@ function drawBrave(
 
   context.clearRect(0, 0, BRAVE_WIDTH, BRAVE_HEIGHT);
   drawArcadeBackdrop(context, state);
+  if (state.stampedeMs > 0) {
+    drawStampedeShake(context, state.distance);
+  }
   state.obstacles.forEach((obstacle) => drawObstacle(context, obstacle, state.distance));
-  drawWingedBuffalo(context, state.buffaloY, state.distance, isBoosting);
+  state.collectibles.forEach((collectible) => drawCollectible(context, collectible, state.distance));
+  drawGhostHerd(context, state);
+  drawWingedBuffalo(context, state.buffaloY, state.distance, isBoosting, state.upgrades.helmet);
   drawBraveOverlay(context, state);
+  if (state.stampedeMs > 0) {
+    context.restore();
+  }
+}
+
+function drawStampedeShake(context: CanvasRenderingContext2D, distance: number): void {
+  context.save();
+  const shakeX = Math.sin(distance / 12) * 3;
+  const shakeY = Math.cos(distance / 15) * 2;
+  context.translate(shakeX, shakeY);
 }
 
 function drawArcadeBackdrop(context: CanvasRenderingContext2D, state: BraveState): void {
@@ -354,6 +468,12 @@ function drawObstacle(
 ): void {
   context.save();
 
+  if (obstacle.smashed) {
+    context.globalAlpha = 0.24;
+    context.translate(0, 18);
+    context.rotate(Math.sin(obstacle.id) * 0.16);
+  }
+
   switch (obstacle.type) {
     case "crateStack":
       drawCrateStack(context, obstacle);
@@ -378,6 +498,70 @@ function drawObstacle(
   }
 
   context.restore();
+}
+
+function drawCollectible(
+  context: CanvasRenderingContext2D,
+  collectible: BraveCollectible,
+  distance: number,
+): void {
+  if (collectible.collected) {
+    return;
+  }
+
+  const bob = Math.sin(distance / 34 + collectible.id) * 5;
+  context.save();
+  context.translate(collectible.x, collectible.y + bob);
+
+  if (collectible.type === "coin") {
+    context.fillStyle = "#f0c66a";
+    context.strokeStyle = "#fff1a8";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(0, 0, collectible.radius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.fillStyle = "#7a4a0b";
+    context.font = "900 13px Inter, system-ui, sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("$", 0, 1);
+  } else {
+    context.fillStyle = "#ff4fa3";
+    context.strokeStyle = "#ffd7eb";
+    context.lineWidth = 3;
+    roundCanvasRect(context, -18, -12, 36, 24, 12);
+    context.fill();
+    context.stroke();
+    context.fillStyle = "#ffd7eb";
+    context.fillRect(-7, -3, 14, 6);
+  }
+
+  context.restore();
+}
+
+function drawGhostHerd(context: CanvasRenderingContext2D, state: BraveState): void {
+  if (state.stampedeMs <= 0) {
+    return;
+  }
+
+  for (let index = 0; index < 4; index += 1) {
+    const x = BUFFALO_X - 72 - index * 58 + Math.sin(state.distance / 22 + index) * 8;
+    const y = state.buffaloY + 8 + Math.cos(state.distance / 28 + index) * 9;
+    context.save();
+    context.globalAlpha = 0.18 + index * 0.04;
+    context.translate(x, y);
+    context.fillStyle = "#e9f7ff";
+    context.beginPath();
+    context.ellipse(34, 30, 34, 23, 0, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = "#ffffff";
+    context.beginPath();
+    context.arc(18, 24, 12, 0, Math.PI * 2);
+    context.arc(50, 24, 12, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
 }
 
 function drawCrateStack(context: CanvasRenderingContext2D, obstacle: BraveObstacle): void {
@@ -480,6 +664,7 @@ function drawWingedBuffalo(
   y: number,
   distance: number,
   isBoosting: boolean,
+  hasHelmet: boolean,
 ): void {
   const wingLift = isBoosting ? Math.sin(distance / 14) * 6 - 9 : Math.sin(distance / 28) * 3;
 
@@ -506,6 +691,16 @@ function drawWingedBuffalo(
   context.beginPath();
   context.arc(38, 18, 24, Math.PI, 0);
   context.fill();
+
+  if (hasHelmet) {
+    context.fillStyle = "#f0c66a";
+    context.beginPath();
+    context.arc(38, 18, 25, Math.PI, 0);
+    context.fill();
+    context.strokeStyle = "#fff1a8";
+    context.lineWidth = 3;
+    context.stroke();
+  }
 
   context.fillStyle = "#3a2417";
   context.beginPath();
@@ -580,6 +775,22 @@ function drawBraveOverlay(context: CanvasRenderingContext2D, state: BraveState):
   context.fillStyle = "#f0c66a";
   context.font = "800 12px Inter, system-ui, sans-serif";
   context.fillText(`BEST ${state.best}`, 34, 68);
+  context.fillStyle = "#f0c66a";
+  context.font = "800 12px Inter, system-ui, sans-serif";
+  context.fillText(`COINS ${state.coins}`, 104, 68);
+
+  context.fillStyle = "rgba(5, 5, 5, 0.54)";
+  context.fillRect(18, 86, 172, 44);
+  context.strokeStyle = state.stampedeMs > 0 ? "#f0c66a" : "rgba(246, 234, 208, 0.18)";
+  context.strokeRect(18, 86, 172, 44);
+  context.fillStyle = state.stampedeMs > 0 ? "#f0c66a" : "#ff4fa3";
+  context.font = "900 12px Inter, system-ui, sans-serif";
+  context.fillText(state.stampedeMs > 0 ? "STAMPEDE x2" : `CANDY ${Math.round(state.stampedeMeter)}%`, 34, 106);
+  context.fillStyle = "#35ff84";
+  context.fillRect(34, 114, Math.max(6, (state.stampedeMs > 0 ? 1 : state.stampedeMeter / 100) * 128), 7);
+  context.fillStyle = "#f6ead0";
+  context.font = "900 12px Inter, system-ui, sans-serif";
+  context.fillText(`HEARTS ${state.hearts}/${state.maxHearts}`, 34, 126);
 
   if (state.phase === "playing") {
     return;
@@ -623,4 +834,34 @@ function readBestScore(): number {
   const stored = window.localStorage.getItem(bestScoreKey);
   const parsed = stored ? Number(stored) : 0;
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readCoinBank(): number {
+  const stored = window.localStorage.getItem(coinBankKey);
+  const parsed = stored ? Number(stored) : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readUpgrades() {
+  const stored = window.localStorage.getItem(upgradesKey);
+
+  if (!stored) {
+    return {
+      extraHeart: false,
+      helmet: false,
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as Partial<BraveState["upgrades"]>;
+    return {
+      extraHeart: Boolean(parsed.extraHeart),
+      helmet: Boolean(parsed.helmet),
+    };
+  } catch {
+    return {
+      extraHeart: false,
+      helmet: false,
+    };
+  }
 }
