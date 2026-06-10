@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
-import type { Dispatch } from "react";
+import type { CSSProperties, Dispatch } from "react";
 import { ArrowLeft, CircleDollarSign, RotateCcw, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -10,7 +10,6 @@ import {
   createInitialRouletteState,
   finishSpin,
   getGoldenBallCandidates,
-  getGoldenBallPocket,
   getPocketColor,
   getTotalBet,
   placeBet,
@@ -29,12 +28,30 @@ type RouletteAction =
   | { type: "bet"; kind: RouletteBetKind; label: string; number?: RoulettePocketValue }
   | { type: "clear" }
   | { type: "spin" }
-  | { type: "finish"; pocket: RoulettePocket }
+  | { type: "finish"; pocket: RoulettePocket; goldenPocket: RoulettePocket }
   | { type: "reset" };
 
 const pocketAngle = 360 / rouletteWheel.length;
 const rouletteNumbers = Array.from({ length: 36 }, (_, index) => String(index + 1) as RoulettePocketValue);
 const straightNumbers: RoulettePocketValue[] = ["0", "00", ...rouletteNumbers];
+
+type PendingSpin = {
+  pocket: RoulettePocket;
+  goldenPocket: RoulettePocket;
+  settleDelayMs: number;
+};
+
+type RouletteSpinStyle = {
+  wheelDurationMs: number;
+  ballDurationMs: number;
+  outerShift: number;
+  hopOne: number;
+  hopTwo: number;
+  hopThree: number;
+  hopFour: number;
+  jitterOne: number;
+  jitterTwo: number;
+};
 
 function rouletteReducer(state: RouletteState, action: RouletteAction): RouletteState {
   switch (action.type) {
@@ -47,7 +64,7 @@ function rouletteReducer(state: RouletteState, action: RouletteAction): Roulette
     case "spin":
       return beginSpin(state);
     case "finish":
-      return finishSpin(state, action.pocket);
+      return finishSpin(state, action.pocket, action.goldenPocket);
     case "reset":
       return createInitialRouletteState();
     default:
@@ -57,46 +74,68 @@ function rouletteReducer(state: RouletteState, action: RouletteAction): Roulette
 
 export function RoulettePage() {
   const [state, dispatch] = useReducer(rouletteReducer, undefined, createInitialRouletteState);
-  const [pendingPocket, setPendingPocket] = useState<RoulettePocket | null>(null);
+  const [pendingSpin, setPendingSpin] = useState<PendingSpin | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [ballRotation, setBallRotation] = useState(0);
+  const [spinStyle, setSpinStyle] = useState<RouletteSpinStyle>(() => createSpinStyle());
   const totalBet = getTotalBet(state.bets);
   const canSpin = state.phase !== "spinning" && state.bets.length > 0;
   const resultText = getResultText(state);
   const goldenCandidates = getGoldenBallCandidates(state.spinIndex);
-  const goldenPocket = getGoldenBallPocket(state.spinIndex);
-  const visibleWinningValue = pendingPocket?.value ?? state.lastResult?.pocket.value ?? null;
+  const activeGoldenPocket = state.phase === "spinning" ? pendingSpin?.goldenPocket : null;
+  const visibleWinningValue = state.phase === "result" ? state.lastResult?.pocket.value ?? null : null;
+  const wheelStyle = {
+    transform: `rotate(${wheelRotation}deg)`,
+    transitionDuration: `${spinStyle.wheelDurationMs}ms`,
+  };
+  const ballTrackStyle = {
+    transform: `rotate(${ballRotation}deg)`,
+    transitionDuration: `${spinStyle.ballDurationMs}ms`,
+    "--roulette-ball-duration": `${spinStyle.ballDurationMs}ms`,
+    "--roulette-ball-outer-shift": `${spinStyle.outerShift}px`,
+    "--roulette-ball-hop-one": `${spinStyle.hopOne}px`,
+    "--roulette-ball-hop-two": `${spinStyle.hopTwo}px`,
+    "--roulette-ball-hop-three": `${spinStyle.hopThree}px`,
+    "--roulette-ball-hop-four": `${spinStyle.hopFour}px`,
+    "--roulette-ball-jitter-one": `${spinStyle.jitterOne}px`,
+    "--roulette-ball-jitter-two": `${spinStyle.jitterTwo}px`,
+  } as CSSProperties;
 
   const betLookup = useMemo(() => {
     return new Map(state.bets.map((bet) => [bet.id, bet.amount]));
   }, [state.bets]);
 
   useEffect(() => {
-    if (state.phase !== "spinning" || !pendingPocket) {
+    if (state.phase !== "spinning" || !pendingSpin) {
       return;
     }
 
     const timer = window.setTimeout(() => {
-      dispatch({ type: "finish", pocket: pendingPocket });
-      setPendingPocket(null);
-    }, 4300);
+      dispatch({ type: "finish", pocket: pendingSpin.pocket, goldenPocket: pendingSpin.goldenPocket });
+      setPendingSpin(null);
+    }, pendingSpin.settleDelayMs);
 
     return () => window.clearTimeout(timer);
-  }, [pendingPocket, state.phase]);
+  }, [pendingSpin, state.phase]);
 
   const handleSpin = () => {
     if (!canSpin) {
       return;
     }
 
-    const nextPocket = pickSpinPocket(state.spinIndex);
+    const nextPocket = pickSpinPocket();
+    const nextGoldenPocket = pickRandomPocket(goldenCandidates);
     const pocketIndex = americanWheelSequence.indexOf(nextPocket.value);
-    const nextWheelRotation = getNextWheelRotation(wheelRotation, pocketIndex);
-    const nextBallRotation = getNextBallRotation(ballRotation, nextWheelRotation, pocketIndex);
+    const nextSpin = getNextRouletteSpin(wheelRotation, ballRotation, pocketIndex);
 
-    setPendingPocket(nextPocket);
-    setWheelRotation(nextWheelRotation);
-    setBallRotation(nextBallRotation);
+    setPendingSpin({
+      pocket: nextPocket,
+      goldenPocket: nextGoldenPocket,
+      settleDelayMs: nextSpin.spinStyle.ballDurationMs + 160,
+    });
+    setSpinStyle(nextSpin.spinStyle);
+    setWheelRotation(nextSpin.wheelRotation);
+    setBallRotation(nextSpin.ballRotation);
     dispatch({ type: "spin" });
   };
 
@@ -121,7 +160,7 @@ export function RoulettePage() {
           <div className="roulette-wheel-shell" aria-label="American double-zero roulette wheel">
             <div
               className="roulette-wheel"
-              style={{ transform: `rotate(${wheelRotation}deg)` }}
+              style={wheelStyle}
             >
               {rouletteWheel.map((pocket, index) => (
                 <span
@@ -143,7 +182,7 @@ export function RoulettePage() {
             </div>
             <div
               className={`roulette-ball-track ${state.phase === "spinning" ? "roulette-ball-track--spinning" : ""}`}
-              style={{ transform: `rotate(${ballRotation}deg)` }}
+              style={ballTrackStyle}
             >
               <span className="roulette-ball" />
             </div>
@@ -161,7 +200,7 @@ export function RoulettePage() {
                 <strong
                   key={pocket.value}
                   className={
-                    state.phase === "spinning" && pocket.value === goldenPocket.value
+                    activeGoldenPocket && pocket.value === activeGoldenPocket.value
                       ? "active"
                       : ""
                   }
@@ -364,35 +403,82 @@ function getResultText(state: RouletteState): string {
   return `${pocket.value} ${pocket.color.toUpperCase()}${golden} - ${outcome} chips`;
 }
 
-function pickSpinPocket(spinIndex: number): RoulettePocket {
-  const index = (spinIndex * 11 + Math.floor(Date.now() / 997)) % rouletteWheel.length;
-  return rouletteWheel[index];
+function pickSpinPocket(): RoulettePocket {
+  return pickRandomPocket(rouletteWheel);
 }
 
-function getNextWheelRotation(currentRotation: number, pocketIndex: number): number {
-  const targetAngle = 360 - pocketIndex * pocketAngle;
-  const nextBaseRotation = (Math.floor(currentRotation / 360) + 6) * 360;
-  let nextRotation = nextBaseRotation + targetAngle;
-
-  while (nextRotation <= currentRotation + 720) {
-    nextRotation += 360;
-  }
-
-  return nextRotation;
+function pickRandomPocket<T>(pockets: T[]): T {
+  return pockets[getRandomInt(pockets.length)];
 }
 
-function getNextBallRotation(currentRotation: number, wheelRotation: number, pocketIndex: number): number {
-  const targetAngle = normalizeAngle(wheelRotation + pocketIndex * pocketAngle);
-  const nextBaseRotation = (Math.floor(currentRotation / 360) + 8) * 360;
-  let nextRotation = nextBaseRotation + targetAngle;
+function getNextRouletteSpin(
+  currentWheelRotation: number,
+  currentBallRotation: number,
+  pocketIndex: number,
+) {
+  const spinStyle = createSpinStyle();
+  const wheelFinalAngle = getRandomFloat(0, 360);
+  const wheelTurns = getRandomIntBetween(5, 8);
+  const ballTurns = getRandomIntBetween(10, 15);
+  const wheelRotation = getNextClockwiseRotation(currentWheelRotation, wheelFinalAngle, wheelTurns);
+  const targetBallAngle = normalizeAngle(wheelRotation + pocketIndex * pocketAngle);
+  const ballRotation = getNextCounterClockwiseRotation(currentBallRotation, targetBallAngle, ballTurns);
 
-  while (nextRotation <= currentRotation + 720) {
-    nextRotation += 360;
-  }
+  return {
+    wheelRotation,
+    ballRotation,
+    spinStyle,
+  };
+}
 
-  return nextRotation;
+function createSpinStyle(): RouletteSpinStyle {
+  const wheelDurationMs = getRandomIntBetween(4300, 5200);
+
+  return {
+    wheelDurationMs,
+    ballDurationMs: wheelDurationMs + getRandomIntBetween(850, 1500),
+    outerShift: -getRandomIntBetween(22, 36),
+    hopOne: -getRandomIntBetween(8, 18),
+    hopTwo: getRandomIntBetween(5, 13),
+    hopThree: -getRandomIntBetween(4, 13),
+    hopFour: getRandomIntBetween(3, 9),
+    jitterOne: getRandomIntBetween(-7, 8),
+    jitterTwo: getRandomIntBetween(-6, 7),
+  };
+}
+
+function getNextClockwiseRotation(currentRotation: number, targetAngle: number, turns: number): number {
+  const baseRotation = currentRotation + turns * 360;
+  const adjustment = normalizeAngle(targetAngle - normalizeAngle(baseRotation));
+  return baseRotation + adjustment;
+}
+
+function getNextCounterClockwiseRotation(currentRotation: number, targetAngle: number, turns: number): number {
+  const baseRotation = currentRotation - turns * 360;
+  const adjustment = normalizeAngle(normalizeAngle(baseRotation) - targetAngle);
+  return baseRotation - adjustment;
 }
 
 function normalizeAngle(angle: number): number {
   return ((angle % 360) + 360) % 360;
+}
+
+function getRandomIntBetween(min: number, max: number): number {
+  return min + getRandomInt(max - min + 1);
+}
+
+function getRandomFloat(min: number, max: number): number {
+  return min + (getRandomInt(1_000_000) / 1_000_000) * (max - min);
+}
+
+function getRandomInt(max: number): number {
+  const cryptoApi = globalThis.crypto;
+
+  if (cryptoApi?.getRandomValues) {
+    const values = new Uint32Array(1);
+    cryptoApi.getRandomValues(values);
+    return values[0] % max;
+  }
+
+  return Math.floor(Math.random() * max);
 }

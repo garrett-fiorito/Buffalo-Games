@@ -1954,7 +1954,7 @@ body.mini-golf-game-active {
   position: absolute;
   inset: 0;
   transform-origin: 50% 50%;
-  transition: transform 4.35s cubic-bezier(0.08, 0.78, 0.14, 1);
+  transition: transform 5.5s cubic-bezier(0.05, 0.82, 0.16, 1);
 }
 
 .roulette-ball {
@@ -1975,40 +1975,56 @@ body.mini-golf-game-active {
 }
 
 .roulette-ball-track--spinning .roulette-ball {
-  animation: roulette-ball-roll 4.35s cubic-bezier(0.08, 0.78, 0.14, 1) both;
+  animation: roulette-ball-roll var(--roulette-ball-duration, 5.5s) cubic-bezier(0.08, 0.78, 0.14, 1) both;
 }
 
 @keyframes roulette-ball-roll {
   0% {
-    transform: translateY(calc(var(--roulette-ball-offset) - 22px)) scale(0.94);
+    transform: translateY(calc(var(--roulette-ball-offset) + var(--roulette-ball-outer-shift, -28px))) scale(0.92);
   }
 
-  18% {
-    transform: translateY(calc(var(--roulette-ball-offset) - 26px)) scale(0.98);
+  12% {
+    transform: translateY(calc(var(--roulette-ball-offset) + var(--roulette-ball-outer-shift, -28px) - 4px)) scale(0.95);
   }
 
-  38% {
-    transform: translateY(calc(var(--roulette-ball-offset) - 10px)) scale(1);
+  28% {
+    transform: translateY(calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-one, -12px))) scale(0.98);
   }
 
-  54% {
-    transform: translateY(calc(var(--roulette-ball-offset) + 7px)) scale(1.03);
+  43% {
+    transform: translate(
+        var(--roulette-ball-jitter-one, 4px),
+        calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-two, 8px))
+      )
+      scale(1.04);
   }
 
-  68% {
-    transform: translateY(calc(var(--roulette-ball-offset) - 14px)) scale(0.99);
+  57% {
+    transform: translate(
+        var(--roulette-ball-jitter-two, -3px),
+        calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-three, -9px))
+      )
+      scale(0.99);
   }
 
-  79% {
-    transform: translateY(calc(var(--roulette-ball-offset) + 10px)) scale(1.04);
+  70% {
+    transform: translateY(calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-two, 8px))) scale(1.04);
   }
 
-  88% {
-    transform: translateY(calc(var(--roulette-ball-offset) - 5px)) scale(1);
+  80% {
+    transform: translate(
+        calc(var(--roulette-ball-jitter-one, 4px) * -0.55),
+        calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-three, -9px))
+      )
+      scale(1);
   }
 
-  94% {
-    transform: translateY(calc(var(--roulette-ball-offset) + 4px)) scale(1.02);
+  89% {
+    transform: translateY(calc(var(--roulette-ball-offset) + var(--roulette-ball-hop-four, 5px))) scale(1.02);
+  }
+
+  96% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 2px)) scale(1);
   }
 
   100% {

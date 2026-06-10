@@ -119,6 +119,15 @@ describe("rouletteEngine", () => {
     expect(finished.history[0].value).toBe("1");
   });
 
+  it("uses the supplied golden pocket when finishing a spin", () => {
+    const betting = placeBet(createInitialRouletteState(), "straight", "7", "7");
+    const spinning = beginSpin(betting);
+    const finished = finishSpin(spinning, { value: "7", color: "red" }, { value: "7", color: "red" });
+
+    expect(finished.lastResult?.goldenHit).toBe(true);
+    expect(finished.lastResult?.totalReturn).toBe(25 * 51);
+  });
+
   it("totals active bets", () => {
     expect(
       getTotalBet([

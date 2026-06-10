@@ -168,8 +168,12 @@ export function beginSpin(state: RouletteState): RouletteState {
   };
 }
 
-export function finishSpin(state: RouletteState, pocket: RoulettePocket): RouletteState {
-  const result = settleBets(state.bets, pocket, getGoldenBallPocket(state.spinIndex));
+export function finishSpin(
+  state: RouletteState,
+  pocket: RoulettePocket,
+  goldenPocket = getGoldenBallPocket(state.spinIndex),
+): RouletteState {
+  const result = settleBets(state.bets, pocket, goldenPocket);
 
   return {
     ...state,
