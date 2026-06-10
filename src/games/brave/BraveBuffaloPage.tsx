@@ -491,8 +491,11 @@ function drawWingedBuffalo(
   context.ellipse(38, 57, 35, 8, 0, 0, Math.PI * 2);
   context.fill();
 
-  drawWing(context, 16, 34 + wingLift, -1);
-  drawWing(context, 60, 34 + wingLift, 1);
+  drawWing(context, 12, 36 + wingLift, -1);
+  drawWing(context, 64, 36 + wingLift, 1);
+
+  drawHorn(context, 20, 14, -1);
+  drawHorn(context, 56, 14, 1);
 
   context.fillStyle = "#26170f";
   context.beginPath();
@@ -502,15 +505,6 @@ function drawWingedBuffalo(
   context.fillStyle = "#140c08";
   context.beginPath();
   context.arc(38, 18, 24, Math.PI, 0);
-  context.fill();
-
-  context.fillStyle = "#f6ead0";
-  context.beginPath();
-  context.arc(18, 12, 17, Math.PI * 0.74, Math.PI * 1.58);
-  context.arc(58, 12, 17, Math.PI * 1.42, Math.PI * 0.26);
-  context.lineTo(57, 25);
-  context.lineTo(19, 25);
-  context.closePath();
   context.fill();
 
   context.fillStyle = "#3a2417";
@@ -533,12 +527,28 @@ function drawWingedBuffalo(
   context.restore();
 }
 
-function drawWing(context: CanvasRenderingContext2D, x: number, y: number, direction: -1 | 1): void {
+function drawHorn(context: CanvasRenderingContext2D, x: number, y: number, direction: -1 | 1): void {
   context.save();
   context.translate(x, y);
   context.scale(direction, 1);
 
   context.fillStyle = "#f6ead0";
+  context.beginPath();
+  context.moveTo(0, 7);
+  context.quadraticCurveTo(-20, -6, -31, 9);
+  context.quadraticCurveTo(-15, 7, -4, 17);
+  context.quadraticCurveTo(-2, 11, 0, 7);
+  context.fill();
+
+  context.restore();
+}
+
+function drawWing(context: CanvasRenderingContext2D, x: number, y: number, direction: -1 | 1): void {
+  context.save();
+  context.translate(x, y);
+  context.scale(direction, 1);
+
+  context.fillStyle = "#eadbb8";
   context.beginPath();
   context.moveTo(0, 0);
   context.quadraticCurveTo(-31, -27, -56, 2);
