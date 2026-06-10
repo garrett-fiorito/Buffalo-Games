@@ -142,9 +142,11 @@ export function RoulettePage() {
               </div>
             </div>
             <div
-              className={`roulette-ball ${state.phase === "spinning" ? "roulette-ball--spinning" : ""}`}
-              style={{ transform: `rotate(${ballRotation}deg) translateY(var(--roulette-ball-offset))` }}
-            />
+              className={`roulette-ball-track ${state.phase === "spinning" ? "roulette-ball-track--spinning" : ""}`}
+              style={{ transform: `rotate(${ballRotation}deg)` }}
+            >
+              <span className="roulette-ball" />
+            </div>
           </div>
 
           <div className="roulette-result" aria-live="polite">

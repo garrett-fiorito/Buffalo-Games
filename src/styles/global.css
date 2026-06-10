@@ -1950,20 +1950,70 @@ body.mini-golf-game-active {
   font-size: 1.6rem;
 }
 
+.roulette-ball-track {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transition: transform 4.35s cubic-bezier(0.08, 0.78, 0.14, 1);
+}
+
 .roulette-ball {
   position: absolute;
   top: 50%;
   left: 50%;
+  display: block;
   width: max(13px, calc(var(--roulette-wheel-size) * 0.05));
   height: max(13px, calc(var(--roulette-wheel-size) * 0.05));
   margin: calc(max(13px, calc(var(--roulette-wheel-size) * 0.05)) / -2) 0 0
     calc(max(13px, calc(var(--roulette-wheel-size) * 0.05)) / -2);
   border-radius: 50%;
   background: #f6ead0;
+  transform: translateY(var(--roulette-ball-offset)) scale(1);
   box-shadow:
     0 0 16px rgba(246, 234, 208, 0.9),
     0 4px 8px rgba(0, 0, 0, 0.38);
-  transition: transform 4.2s cubic-bezier(0.1, 0.78, 0.18, 1);
+}
+
+.roulette-ball-track--spinning .roulette-ball {
+  animation: roulette-ball-roll 4.35s cubic-bezier(0.08, 0.78, 0.14, 1) both;
+}
+
+@keyframes roulette-ball-roll {
+  0% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 22px)) scale(0.94);
+  }
+
+  18% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 26px)) scale(0.98);
+  }
+
+  38% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 10px)) scale(1);
+  }
+
+  54% {
+    transform: translateY(calc(var(--roulette-ball-offset) + 7px)) scale(1.03);
+  }
+
+  68% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 14px)) scale(0.99);
+  }
+
+  79% {
+    transform: translateY(calc(var(--roulette-ball-offset) + 10px)) scale(1.04);
+  }
+
+  88% {
+    transform: translateY(calc(var(--roulette-ball-offset) - 5px)) scale(1);
+  }
+
+  94% {
+    transform: translateY(calc(var(--roulette-ball-offset) + 4px)) scale(1.02);
+  }
+
+  100% {
+    transform: translateY(var(--roulette-ball-offset)) scale(1);
+  }
 }
 
 .roulette-result {
