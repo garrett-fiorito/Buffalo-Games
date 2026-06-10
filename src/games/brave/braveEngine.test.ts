@@ -4,8 +4,6 @@ import {
   BRAVE_WIDTH,
   BUFFALO_X,
   FLOOR_Y,
-  NEAR_MISS_SCORE,
-  SPARK_SCORE,
   createInitialBraveState,
   createObstacle,
   scriptedObstacleTypes,
@@ -98,36 +96,10 @@ describe("braveEngine", () => {
     expect(stepBrave(state, 16, false).phase).toBe("gameOver");
   });
 
-  it("awards spark bonus and recycles the spark", () => {
-    const state = {
-      ...startBrave(createInitialBraveState()),
-      buffaloY: 200,
-      sparks: [{ id: 0, x: BUFFALO_X + 24, y: 228, radius: 14 }],
-    };
+  it("keeps scoring focused on distance only", () => {
+    const state = startBrave(createInitialBraveState());
+    const nextState = stepBrave(state, 500, false);
 
-    const nextState = stepBrave(state, 16, false);
-
-    expect(nextState.bonusScore).toBe(SPARK_SCORE);
-    expect(nextState.lastEvent).toBe("spark");
-  });
-
-  it("awards near miss bonus once when narrowly clearing an obstacle", () => {
-    const obstacle = {
-      ...createObstacle(2, BUFFALO_X - 96),
-      y: 188,
-      height: 42,
-      nearMissed: false,
-    };
-    const state = {
-      ...startBrave(createInitialBraveState()),
-      buffaloY: 230,
-      obstacles: [obstacle],
-    };
-
-    const nextState = stepBrave(state, 16, false);
-
-    expect(nextState.bonusScore).toBe(NEAR_MISS_SCORE);
-    expect(nextState.lastEvent).toBe("nearMiss");
-    expect(nextState.obstacles[0].nearMissed).toBe(true);
+    expect(nextState.score).toBe(Math.floor(nextState.distance / 10));
   });
 });

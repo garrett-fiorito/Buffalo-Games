@@ -1,4 +1,4 @@
-import type { BraveObstacle, BraveState, FuelSpark, ObstacleType } from "./braveTypes";
+import type { BraveObstacle, BraveState, ObstacleType } from "./braveTypes";
 
 export const BRAVE_WIDTH = 900;
 export const BRAVE_HEIGHT = 520;
@@ -13,8 +13,6 @@ export const MAX_FALL_SPEED = 720;
 export const MAX_RISE_SPEED = -620;
 export const BASE_SPEED = 270;
 export const MAX_SPEED = 525;
-export const SPARK_SCORE = 50;
-export const NEAR_MISS_SCORE = 25;
 
 export const scriptedObstacleTypes: ObstacleType[] = [
   "crateStack",
@@ -27,8 +25,6 @@ export const scriptedObstacleTypes: ObstacleType[] = [
 
 const initialObstacleX = BRAVE_WIDTH + 240;
 const obstacleSpacing = 260;
-const initialSparkX = BRAVE_WIDTH + 380;
-const sparkSpacing = 430;
 
 export function createInitialBraveState(best = 0): BraveState {
   return {
@@ -36,17 +32,13 @@ export function createInitialBraveState(best = 0): BraveState {
     buffaloY: FLOOR_Y - BUFFALO_HEIGHT,
     velocityY: 0,
     distance: 0,
-    bonusScore: 0,
     score: 0,
     best,
     speed: BASE_SPEED,
     obstacles: [0, 1, 2, 3].map((index) =>
       createObstacle(index, initialObstacleX + index * obstacleSpacing),
     ),
-    sparks: [0, 1].map((index) => createSpark(index, initialSparkX + index * sparkSpacing)),
     nextObstacleId: 4,
-    nextSparkId: 2,
-    lastEvent: null,
   };
 }
 
@@ -99,38 +91,18 @@ export function stepBrave(
     x: obstacle.x - movement,
   }));
   const recycledObstacles = recycleObstacles(movedObstacles, state.nextObstacleId);
-  const movedSparks = state.sparks.map((spark) => ({
-    ...spark,
-    x: spark.x - movement,
-  }));
-  const sparkResult = collectAndRecycleSparks(
-    movedSparks,
-    state.nextSparkId,
-    buffaloY,
-    recycledObstacles.obstacles,
-  );
-  const nearMissResult = awardNearMisses(recycledObstacles.obstacles, buffaloY);
   const distance = state.distance + movement;
-  const bonusScore =
-    state.bonusScore +
-    sparkResult.collected * SPARK_SCORE +
-    nearMissResult.count * NEAR_MISS_SCORE;
-  const score = Math.floor(distance / 10) + bonusScore;
+  const score = Math.floor(distance / 10);
   const nextState: BraveState = {
     ...state,
     buffaloY,
     velocityY,
     distance,
-    bonusScore,
     score,
     best: Math.max(state.best, score),
     speed,
-    obstacles: nearMissResult.obstacles,
-    sparks: sparkResult.sparks,
+    obstacles: recycledObstacles.obstacles,
     nextObstacleId: recycledObstacles.nextObstacleId,
-    nextSparkId: sparkResult.nextSparkId,
-    lastEvent:
-      sparkResult.collected > 0 ? "spark" : nearMissResult.count > 0 ? "nearMiss" : null,
   };
 
   if (nextState.obstacles.some((obstacle) => collidesWithObstacle(obstacle, nextState.buffaloY))) {
@@ -165,17 +137,6 @@ export function createObstacle(id: number, x: number): BraveObstacle {
   }
 }
 
-export function createSpark(id: number, x: number): FuelSpark {
-  const yPattern = [138, 246, 334, 186, 292, 112];
-
-  return {
-    id,
-    x,
-    y: yPattern[id % yPattern.length],
-    radius: 12,
-  };
-}
-
 export function collidesWithObstacle(obstacle: BraveObstacle, buffaloY: number): boolean {
   const buffalo = getBuffaloHitbox(buffaloY);
 
@@ -185,37 +146,6 @@ export function collidesWithObstacle(obstacle: BraveObstacle, buffaloY: number):
     buffalo.y < obstacle.y + obstacle.height &&
     buffalo.y + buffalo.height > obstacle.y
   );
-}
-
-function collectAndRecycleSparks(
-  sparks: FuelSpark[],
-  nextSparkId: number,
-  buffaloY: number,
-  obstacles: BraveObstacle[],
-): { sparks: FuelSpark[]; nextSparkId: number; collected: number } {
-  let currentNextId = nextSparkId;
-  let maxX = Math.max(...sparks.map((spark) => spark.x), BRAVE_WIDTH);
-  let collected = 0;
-  const nextSparks = sparks.map((spark) => {
-    if (spark.x + spark.radius < -40 || collidesWithSpark(spark, buffaloY)) {
-      if (collidesWithSpark(spark, buffaloY)) {
-        collected += 1;
-      }
-
-      maxX += sparkSpacing;
-      const nextSpark = createSpark(currentNextId, maxX + getSparkOffset(currentNextId, obstacles));
-      currentNextId += 1;
-      return nextSpark;
-    }
-
-    return spark;
-  });
-
-  return {
-    sparks: nextSparks,
-    nextSparkId: currentNextId,
-    collected,
-  };
 }
 
 function recycleObstacles(
@@ -241,44 +171,6 @@ function recycleObstacles(
   };
 }
 
-function awardNearMisses(
-  obstacles: BraveObstacle[],
-  buffaloY: number,
-): { obstacles: BraveObstacle[]; count: number } {
-  let count = 0;
-  const buffalo = getBuffaloHitbox(buffaloY);
-  const nextObstacles = obstacles.map((obstacle) => {
-    if (obstacle.nearMissed || obstacle.x + obstacle.width >= buffalo.x) {
-      return obstacle;
-    }
-
-    const verticalGap = getVerticalGap(buffalo, obstacle);
-
-    if (verticalGap > 42) {
-      return obstacle;
-    }
-
-    count += 1;
-    return {
-      ...obstacle,
-      nearMissed: true,
-    };
-  });
-
-  return {
-    obstacles: nextObstacles,
-    count,
-  };
-}
-
-function collidesWithSpark(spark: FuelSpark, buffaloY: number): boolean {
-  const buffalo = getBuffaloHitbox(buffaloY);
-  const closestX = clamp(spark.x, buffalo.x, buffalo.x + buffalo.width);
-  const closestY = clamp(spark.y, buffalo.y, buffalo.y + buffalo.height);
-
-  return Math.hypot(spark.x - closestX, spark.y - closestY) <= spark.radius;
-}
-
 function getBuffaloHitbox(buffaloY: number) {
   return {
     x: BUFFALO_X + HITBOX_INSET,
@@ -288,21 +180,6 @@ function getBuffaloHitbox(buffaloY: number) {
   };
 }
 
-function getVerticalGap(
-  buffalo: { y: number; height: number },
-  obstacle: Pick<BraveObstacle, "y" | "height">,
-): number {
-  if (buffalo.y + buffalo.height < obstacle.y) {
-    return obstacle.y - (buffalo.y + buffalo.height);
-  }
-
-  if (obstacle.y + obstacle.height < buffalo.y) {
-    return buffalo.y - (obstacle.y + obstacle.height);
-  }
-
-  return 0;
-}
-
 function getSpeedForDistance(distance: number): number {
   return Math.min(MAX_SPEED, BASE_SPEED + distance / 85);
 }
@@ -310,11 +187,6 @@ function getSpeedForDistance(distance: number): number {
 function getObstacleGap(id: number): number {
   const gaps = [260, 310, 285, 335, 300, 360];
   return gaps[id % gaps.length];
-}
-
-function getSparkOffset(id: number, obstacles: BraveObstacle[]): number {
-  const nearestObstacle = obstacles.find((obstacle) => obstacle.id % 3 === id % 3);
-  return nearestObstacle ? 80 : 0;
 }
 
 function clamp(value: number, min: number, max: number): number {

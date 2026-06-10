@@ -1,30 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { ArrowLeft, Gauge, Maximize2, Minimize2, Play, RotateCcw, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   BRAVE_HEIGHT,
   BRAVE_WIDTH,
-  BUFFALO_HEIGHT,
-  BUFFALO_WIDTH,
   BUFFALO_X,
   FLOOR_Y,
   createInitialBraveState,
   startBrave,
   stepBrave,
 } from "./braveEngine";
-import type { BraveObstacle, BraveState, FuelSpark } from "./braveTypes";
-
-type JetParticle = {
-  id: number;
-  x: number;
-  y: number;
-  radius: number;
-  velocityX: number;
-  velocityY: number;
-  life: number;
-  color: string;
-};
+import type { BraveObstacle, BraveState } from "./braveTypes";
 
 const bestScoreKey = "black-buffalo-brave-best";
 
@@ -35,8 +22,6 @@ export function BraveBuffaloPage() {
   const lastFrameRef = useRef<number | null>(null);
   const inputHeldRef = useRef(false);
   const stateRef = useRef<BraveState>(createInitialBraveState(readBestScore()));
-  const particlesRef = useRef<JetParticle[]>([]);
-  const particleIdRef = useRef(0);
   const [state, setState] = useState(stateRef.current);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -56,6 +41,22 @@ export function BraveBuffaloPage() {
   const endBoost = useCallback(() => {
     inputHeldRef.current = false;
   }, []);
+
+  const handleStagePointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      beginBoost();
+    },
+    [beginBoost],
+  );
+
+  const handleStagePointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      endBoost();
+    },
+    [endBoost],
+  );
 
   useEffect(() => {
     document.body.classList.add("brave-game-active");
@@ -79,7 +80,7 @@ export function BraveBuffaloPage() {
   }, []);
 
   useEffect(() => {
-    drawBrave(canvasRef.current, state, particlesRef.current, inputHeldRef.current);
+    drawBrave(canvasRef.current, state, inputHeldRef.current);
     stateRef.current = state;
 
     if (state.best > 0) {
@@ -92,19 +93,11 @@ export function BraveBuffaloPage() {
       const lastFrame = lastFrameRef.current ?? timestamp;
       const deltaMs = timestamp - lastFrame;
       lastFrameRef.current = timestamp;
-      const deltaSeconds = Math.min(deltaMs, 48) / 1000;
 
       updateState((current) => {
-        const next =
-          current.phase === "playing" ? stepBrave(current, deltaMs, inputHeldRef.current) : current;
-        updateParticles(
-          particlesRef.current,
-          next,
-          inputHeldRef.current,
-          deltaSeconds,
-          particleIdRef,
-        );
-        return next;
+        return current.phase === "playing"
+          ? stepBrave(current, deltaMs, inputHeldRef.current)
+          : current;
       });
 
       frameRef.current = window.requestAnimationFrame(tick);
@@ -151,7 +144,7 @@ export function BraveBuffaloPage() {
   }, []);
 
   const actionLabel =
-    state.phase === "gameOver" ? "Restart run" : state.phase === "ready" ? "Start run" : "Boost";
+    state.phase === "gameOver" ? "Restart run" : state.phase === "ready" ? "Start run" : "Flap";
   const actionIcon = state.phase === "gameOver" ? <RotateCcw size={18} /> : <Play size={18} />;
 
   return (
@@ -174,10 +167,11 @@ export function BraveBuffaloPage() {
         <div
           ref={stageRef}
           className="brave-stage"
-          onPointerDown={beginBoost}
-          onPointerUp={endBoost}
-          onPointerCancel={endBoost}
-          onPointerLeave={endBoost}
+          onContextMenu={(event) => event.preventDefault()}
+          onPointerDown={handleStagePointerDown}
+          onPointerUp={handleStagePointerUp}
+          onPointerCancel={handleStagePointerUp}
+          onPointerLeave={handleStagePointerUp}
         >
           <button
             className="brave-fullscreen-button"
@@ -185,8 +179,14 @@ export function BraveBuffaloPage() {
             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
             onClick={handleFullscreen}
-            onPointerDown={(event) => event.stopPropagation()}
-            onPointerUp={(event) => event.stopPropagation()}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onPointerUp={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
           >
             {isFullscreen ? (
               <Minimize2 size={17} aria-hidden="true" />
@@ -201,18 +201,15 @@ export function BraveBuffaloPage() {
             width={BRAVE_WIDTH}
             height={BRAVE_HEIGHT}
             aria-label="Brave Buffalo arcade game canvas"
+            onContextMenu={(event) => event.preventDefault()}
           />
         </div>
 
         <aside className="brave-panel" aria-live="polite">
           <div>
-            <span className="panel-kicker">Jetpack run</span>
+            <span className="panel-kicker">Wing run</span>
             <h2>{getStatusTitle(state)}</h2>
             <p>{getStatusMessage(state)}</p>
-          </div>
-          <div className="brave-bonus-readout">
-            <span>Bonus</span>
-            <strong>{getBonusText(state)}</strong>
           </div>
           <button
             className="button button-primary"
@@ -252,7 +249,7 @@ function Stat({ label, value, icon }: StatProps) {
 
 function getStatusTitle(state: BraveState): string {
   if (state.phase === "gameOver") {
-    return "Run ended";
+    return "Run over";
   }
 
   if (state.phase === "playing") {
@@ -264,84 +261,19 @@ function getStatusTitle(state: BraveState): string {
 
 function getStatusMessage(state: BraveState): string {
   if (state.phase === "gameOver") {
-    return "Hit start to launch a fresh run and chase your best distance.";
+    return "Better luck next time.";
   }
 
   if (state.phase === "playing") {
-    return "Release to drop, hold to rise, and skim hazards for near-miss points.";
+    return "Release to drop, hold to rise, and avoid the red hazards.";
   }
 
-  return "Hold the button, press Space, or touch the game to fire the jetpack.";
-}
-
-function getBonusText(state: BraveState): string {
-  if (state.lastEvent === "spark") {
-    return "Fuel spark +50";
-  }
-
-  if (state.lastEvent === "nearMiss") {
-    return "Near miss +25";
-  }
-
-  return "Collect sparks and thread close calls.";
-}
-
-function updateParticles(
-  particles: JetParticle[],
-  state: BraveState,
-  isBoosting: boolean,
-  deltaSeconds: number,
-  particleId: MutableRefObject<number>,
-): void {
-  const scroll = state.speed * deltaSeconds;
-
-  for (let index = particles.length - 1; index >= 0; index -= 1) {
-    const particle = particles[index];
-    particle.life -= deltaSeconds;
-    particle.x += particle.velocityX * deltaSeconds - scroll;
-    particle.y += particle.velocityY * deltaSeconds;
-    particle.radius *= 0.985;
-
-    if (particle.life <= 0 || particle.radius <= 0.7) {
-      particles.splice(index, 1);
-    }
-  }
-
-  if (state.phase === "playing" && isBoosting) {
-    for (let index = 0; index < 3; index += 1) {
-      particles.push({
-        id: particleId.current,
-        x: BUFFALO_X - 2,
-        y: state.buffaloY + BUFFALO_HEIGHT - 10 + index * 4,
-        radius: 5 + index * 1.4,
-        velocityX: -90 - index * 36,
-        velocityY: 80 + index * 32,
-        life: 0.32,
-        color: index === 0 ? "#fff2a8" : index === 1 ? "#ff9d3d" : "#35ff84",
-      });
-      particleId.current += 1;
-    }
-  }
-
-  if (state.phase === "playing" && state.buffaloY + BUFFALO_HEIGHT >= FLOOR_Y - 1 && !isBoosting) {
-    particles.push({
-      id: particleId.current,
-      x: BUFFALO_X + 20,
-      y: FLOOR_Y - 8,
-      radius: 4,
-      velocityX: -120,
-      velocityY: -28,
-      life: 0.42,
-      color: "rgba(246, 234, 208, 0.52)",
-    });
-    particleId.current += 1;
-  }
+  return "Hold the button, press Space, or touch the game to flap upward.";
 }
 
 function drawBrave(
   canvas: HTMLCanvasElement | null,
   state: BraveState,
-  particles: JetParticle[],
   isBoosting: boolean,
 ): void {
   if (!canvas) {
@@ -356,10 +288,8 @@ function drawBrave(
 
   context.clearRect(0, 0, BRAVE_WIDTH, BRAVE_HEIGHT);
   drawArcadeBackdrop(context, state);
-  state.sparks.forEach((spark) => drawSpark(context, spark, state.distance));
   state.obstacles.forEach((obstacle) => drawObstacle(context, obstacle, state.distance));
-  drawParticles(context, particles);
-  drawBuffalo(context, state.buffaloY, isBoosting);
+  drawWingedBuffalo(context, state.buffaloY, state.distance, isBoosting);
   drawBraveOverlay(context, state);
 }
 
@@ -451,13 +381,13 @@ function drawObstacle(
 }
 
 function drawCrateStack(context: CanvasRenderingContext2D, obstacle: BraveObstacle): void {
-  context.fillStyle = "#f0a33c";
+  context.fillStyle = "#e11d2e";
   for (let row = 0; row < 3; row += 1) {
     const size = 28;
     const x = obstacle.x + (row % 2) * 14;
     const y = obstacle.y + row * 25;
     context.fillRect(x, y, size, size);
-    context.strokeStyle = "#5b3218";
+    context.strokeStyle = "#6b0610";
     context.lineWidth = 3;
     context.strokeRect(x, y, size, size);
     context.beginPath();
@@ -470,25 +400,25 @@ function drawCrateStack(context: CanvasRenderingContext2D, obstacle: BraveObstac
 }
 
 function drawWarningTower(context: CanvasRenderingContext2D, obstacle: BraveObstacle): void {
-  context.fillStyle = "#141414";
+  context.fillStyle = "#190509";
   context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-  context.fillStyle = "#f0c66a";
+  context.fillStyle = "#ff3d5a";
   for (let y = obstacle.y + 8; y < obstacle.y + obstacle.height; y += 28) {
     context.fillRect(obstacle.x + 5, y, obstacle.width - 10, 12);
   }
-  context.strokeStyle = "#35ff84";
+  context.strokeStyle = "#f6ead0";
   context.lineWidth = 3;
   context.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
 }
 
 function drawDrone(context: CanvasRenderingContext2D, obstacle: BraveObstacle, distance: number): void {
   const bob = Math.sin(distance / 60 + obstacle.id) * 6;
-  context.fillStyle = "#2e3f55";
+  context.fillStyle = "#9f1020";
   roundCanvasRect(context, obstacle.x, obstacle.y + bob, obstacle.width, obstacle.height, 12);
   context.fill();
-  context.fillStyle = "#35ff84";
+  context.fillStyle = "#ffccd3";
   context.fillRect(obstacle.x + 20, obstacle.y + 14 + bob, 44, 8);
-  context.strokeStyle = "#f6ead0";
+  context.strokeStyle = "#ff3d5a";
   context.lineWidth = 3;
   context.beginPath();
   context.moveTo(obstacle.x + 12, obstacle.y + bob);
@@ -511,13 +441,13 @@ function drawLaserGate(context: CanvasRenderingContext2D, obstacle: BraveObstacl
 }
 
 function drawLowArch(context: CanvasRenderingContext2D, obstacle: BraveObstacle): void {
-  context.fillStyle = "#6f4a2f";
+  context.fillStyle = "#a50f1d";
   roundCanvasRect(context, obstacle.x, obstacle.y, obstacle.width, obstacle.height, 20);
   context.fill();
-  context.strokeStyle = "#f0c66a";
+  context.strokeStyle = "#ffccd3";
   context.lineWidth = 4;
   context.stroke();
-  context.fillStyle = "#35ff84";
+  context.fillStyle = "#ff3d5a";
   context.fillRect(obstacle.x + 18, obstacle.y + 16, obstacle.width - 36, 5);
 }
 
@@ -530,11 +460,11 @@ function drawRollingBarrel(
   context.save();
   context.translate(obstacle.x + radius, obstacle.y + radius);
   context.rotate(distance / 38);
-  context.fillStyle = "#b9572e";
+  context.fillStyle = "#d7192d";
   context.beginPath();
   context.arc(0, 0, radius, 0, Math.PI * 2);
   context.fill();
-  context.strokeStyle = "#f0c66a";
+  context.strokeStyle = "#ffccd3";
   context.lineWidth = 4;
   context.beginPath();
   context.moveTo(-radius + 6, 0);
@@ -545,81 +475,85 @@ function drawRollingBarrel(
   context.restore();
 }
 
-function drawSpark(context: CanvasRenderingContext2D, spark: FuelSpark, distance: number): void {
-  const pulse = Math.sin(distance / 34 + spark.id) * 2;
-  context.fillStyle = "rgba(53, 255, 132, 0.18)";
-  context.beginPath();
-  context.arc(spark.x, spark.y, spark.radius + 10 + pulse, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#35ff84";
-  context.beginPath();
-  context.arc(spark.x, spark.y, spark.radius + pulse * 0.3, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#f6ead0";
-  context.fillRect(spark.x - 2, spark.y - spark.radius - 5, 4, spark.radius * 2 + 10);
-  context.fillRect(spark.x - spark.radius - 5, spark.y - 2, spark.radius * 2 + 10, 4);
-}
+function drawWingedBuffalo(
+  context: CanvasRenderingContext2D,
+  y: number,
+  distance: number,
+  isBoosting: boolean,
+): void {
+  const wingLift = isBoosting ? Math.sin(distance / 18) * 5 - 8 : Math.sin(distance / 28) * 3;
 
-function drawParticles(context: CanvasRenderingContext2D, particles: JetParticle[]): void {
-  particles.forEach((particle) => {
-    context.fillStyle = particle.color;
-    context.globalAlpha = Math.max(0, Math.min(1, particle.life * 3));
-    context.beginPath();
-    context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-    context.fill();
-    context.globalAlpha = 1;
-  });
-}
-
-function drawBuffalo(context: CanvasRenderingContext2D, y: number, isBoosting: boolean): void {
   context.save();
   context.translate(BUFFALO_X, y);
 
-  context.fillStyle = "#6f3e24";
-  roundCanvasRect(context, 8, 14, BUFFALO_WIDTH - 12, 34, 16);
+  context.fillStyle = "rgba(0, 0, 0, 0.22)";
+  context.beginPath();
+  context.ellipse(36, 56, 34, 9, 0, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = "#2d1a10";
-  roundCanvasRect(context, 18, 5, 38, 34, 17);
+  drawWing(context, 13, 29 + wingLift, -1);
+  drawWing(context, 59, 29 + wingLift, 1);
+
+  context.fillStyle = "#2b180f";
+  context.beginPath();
+  context.arc(36, 27, 24, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#140c08";
+  context.beginPath();
+  context.arc(36, 15, 23, Math.PI, 0);
   context.fill();
 
   context.fillStyle = "#f6ead0";
   context.beginPath();
-  context.arc(14, 9, 14, Math.PI * 0.72, Math.PI * 1.56);
-  context.arc(58, 9, 14, Math.PI * 1.44, Math.PI * 0.28);
-  context.lineTo(56, 20);
-  context.lineTo(16, 20);
+  context.arc(14, 10, 15, Math.PI * 0.72, Math.PI * 1.58);
+  context.arc(58, 10, 15, Math.PI * 1.42, Math.PI * 0.28);
+  context.lineTo(56, 24);
+  context.lineTo(16, 24);
   context.closePath();
   context.fill();
 
+  context.fillStyle = "#3a2417";
+  context.beginPath();
+  context.ellipse(36, 35, 18, 12, 0, 0, Math.PI * 2);
+  context.fill();
+
   context.fillStyle = "#f6ead0";
   context.beginPath();
-  context.arc(31, 19, 3.4, 0, Math.PI * 2);
-  context.arc(47, 19, 3.4, 0, Math.PI * 2);
+  context.arc(28, 24, 3.2, 0, Math.PI * 2);
+  context.arc(44, 24, 3.2, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = "#a96f39";
-  roundCanvasRect(context, 30, 29, 24, 15, 8);
+  context.fillStyle = "#050505";
+  context.beginPath();
+  context.arc(31, 36, 2.2, 0, Math.PI * 2);
+  context.arc(41, 36, 2.2, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = "#30363d";
-  roundCanvasRect(context, -2, 25, 20, 19, 5);
+  context.restore();
+}
+
+function drawWing(context: CanvasRenderingContext2D, x: number, y: number, direction: -1 | 1): void {
+  context.save();
+  context.translate(x, y);
+  context.scale(direction, 1);
+
+  context.fillStyle = "#f6ead0";
+  context.beginPath();
+  context.moveTo(0, 0);
+  context.quadraticCurveTo(-28, -24, -47, 3);
+  context.quadraticCurveTo(-25, 2, -14, 18);
+  context.quadraticCurveTo(-7, 9, 0, 0);
   context.fill();
 
-  if (isBoosting) {
-    const flame = context.createLinearGradient(5, 40, 5, 72);
-    flame.addColorStop(0, "#fff2a8");
-    flame.addColorStop(0.42, "#ff9d3d");
-    flame.addColorStop(1, "rgba(255, 61, 90, 0)");
-    context.fillStyle = flame;
-    context.beginPath();
-    context.moveTo(2, 42);
-    context.lineTo(16, 42);
-    context.lineTo(9, 76);
-    context.closePath();
-    context.fill();
-  }
-
+  context.strokeStyle = "rgba(43, 24, 15, 0.34)";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(-8, 5);
+  context.lineTo(-34, -2);
+  context.moveTo(-10, 9);
+  context.lineTo(-28, 12);
+  context.stroke();
   context.restore();
 }
 
@@ -636,11 +570,6 @@ function drawBraveOverlay(context: CanvasRenderingContext2D, state: BraveState):
   context.fillText(`BEST ${state.best}`, 34, 68);
 
   if (state.phase === "playing") {
-    if (state.lastEvent) {
-      context.fillStyle = state.lastEvent === "spark" ? "#35ff84" : "#f0c66a";
-      context.font = "900 18px Inter, system-ui, sans-serif";
-      context.fillText(state.lastEvent === "spark" ? "+50 SPARK" : "+25 NEAR MISS", 360, 72);
-    }
     return;
   }
 
@@ -650,10 +579,14 @@ function drawBraveOverlay(context: CanvasRenderingContext2D, state: BraveState):
   context.textAlign = "center";
   context.fillStyle = "#f6ead0";
   context.font = '900 34px Georgia, Cambria, "Times New Roman", serif';
-  context.fillText(state.phase === "gameOver" ? "Run Over" : "Hold to Boost", BRAVE_WIDTH / 2, 214);
-  context.fillStyle = "#35ff84";
+  context.fillText(state.phase === "gameOver" ? "Run over" : "Hold to fly", BRAVE_WIDTH / 2, 214);
+  context.fillStyle = state.phase === "gameOver" ? "#f0c66a" : "#35ff84";
   context.font = "850 16px Inter, system-ui, sans-serif";
-  context.fillText("Dodge six hazard types, collect sparks, and chase a new best.", BRAVE_WIDTH / 2, 246);
+  context.fillText(
+    state.phase === "gameOver" ? "Better luck next time." : "Avoid the red hazards and chase a new best.",
+    BRAVE_WIDTH / 2,
+    246,
+  );
   context.restore();
 }
 

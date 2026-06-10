@@ -1,0 +1,19 @@
+{
+  "name": "Black Buffalo Games",
+  "short_name": "Buffalo Games",
+  "description": "Buffalo-themed arcade and table games.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

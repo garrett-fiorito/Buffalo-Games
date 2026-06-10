@@ -150,6 +150,7 @@ a {
   color: var(--color-muted);
   font-size: 0.93rem;
   font-weight: 750;
+  white-space: nowrap;
 }
 
 .site-nav a.active,
@@ -480,7 +481,7 @@ h1 {
 .brave-card-speedline--two {
   top: 112px;
   width: 78px;
-  background: rgba(53, 255, 132, 0.52);
+  background: rgba(255, 61, 90, 0.56);
 }
 
 .brave-card-hazard {
@@ -495,8 +496,8 @@ h1 {
   height: 104px;
   border: 2px solid rgba(246, 234, 208, 0.28);
   background:
-    repeating-linear-gradient(180deg, #f0c66a 0 12px, #141414 12px 24px),
-    #141414;
+    repeating-linear-gradient(180deg, #ff3d5a 0 12px, #190509 12px 24px),
+    #190509;
 }
 
 .brave-card-hazard--drone {
@@ -506,7 +507,7 @@ h1 {
   height: 34px;
   border: 2px solid rgba(246, 234, 208, 0.28);
   border-radius: 999px;
-  background: #2e3f55;
+  background: #b51022;
 }
 
 .brave-card-runner {
@@ -539,6 +540,26 @@ h1 {
   background: #2d1a10;
 }
 
+.brave-card-wing {
+  position: absolute;
+  top: 28px;
+  width: 48px;
+  height: 34px;
+  border-radius: 70% 20% 70% 20%;
+  background: var(--color-cream);
+  box-shadow: inset -8px -6px 0 rgba(215, 164, 72, 0.28);
+}
+
+.brave-card-wing--left {
+  left: 3px;
+  transform: rotate(-24deg);
+}
+
+.brave-card-wing--right {
+  right: -8px;
+  transform: scaleX(-1) rotate(-24deg);
+}
+
 .brave-card-runner-horn {
   position: absolute;
   top: 5px;
@@ -556,26 +577,6 @@ h1 {
 .brave-card-runner-horn--right {
   right: 10px;
   transform: rotate(28deg);
-}
-
-.brave-card-jetpack {
-  position: absolute;
-  left: 10px;
-  bottom: 22px;
-  width: 24px;
-  height: 28px;
-  border-radius: 5px;
-  background: #30363d;
-}
-
-.brave-card-flame {
-  position: absolute;
-  left: 13px;
-  bottom: -8px;
-  width: 18px;
-  height: 36px;
-  clip-path: polygon(50% 100%, 0 0, 100% 0);
-  background: linear-gradient(180deg, #fff2a8, #ff9d3d 52%, rgba(255, 61, 90, 0));
 }
 
 .game-card__body {
@@ -968,6 +969,11 @@ h1 {
     #050505;
   box-shadow: var(--shadow-soft);
   touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
 }
 
 .brave-canvas {
@@ -978,6 +984,19 @@ h1 {
   border: 1px solid rgba(246, 234, 208, 0.12);
   border-radius: var(--radius);
   cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.brave-stage *,
+body.brave-game-active {
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
 }
 
 .brave-fullscreen-button {
@@ -1036,28 +1055,6 @@ h1 {
 .brave-panel p {
   color: var(--color-muted);
   line-height: 1.55;
-}
-
-.brave-bonus-readout {
-  display: grid;
-  gap: 4px;
-  min-height: 70px;
-  padding: 14px;
-  border: 1px solid rgba(53, 255, 132, 0.24);
-  border-radius: var(--radius);
-  background: rgba(53, 255, 132, 0.06);
-}
-
-.brave-bonus-readout span {
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.brave-bonus-readout strong {
-  color: var(--color-cream);
-  font-size: 1rem;
 }
 
 .billiards-panel h2 {

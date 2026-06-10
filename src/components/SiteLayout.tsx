@@ -52,7 +52,7 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <Rocket size={17} aria-hidden="true" />
-            Brave
+            Brave Buffalo
           </NavLink>
         </nav>
       </header>
