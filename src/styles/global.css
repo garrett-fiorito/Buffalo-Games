@@ -163,7 +163,8 @@ a {
 .blackjack-view,
 .billiards-view,
 .flappy-view,
-.brave-view {
+.brave-view,
+.roulette-view {
   display: grid;
   gap: 28px;
 }
@@ -512,41 +513,31 @@ h1 {
 
 .brave-card-runner {
   position: absolute;
-  left: 48px;
-  bottom: 82px;
-  width: 112px;
-  height: 76px;
+  left: 44px;
+  bottom: 78px;
+  width: 126px;
+  height: 88px;
   transform: rotate(-6deg);
-}
-
-.brave-card-runner::before {
-  position: absolute;
-  right: 10px;
-  bottom: 13px;
-  left: 26px;
-  height: 34px;
-  content: "";
-  border-radius: 999px;
-  background: #6f3e24;
 }
 
 .brave-card-runner-face {
   position: absolute;
-  left: 40px;
-  top: 10px;
-  width: 46px;
-  height: 40px;
+  left: 38px;
+  top: 14px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  background: #2d1a10;
+  background: #26170f;
+  box-shadow: 0 15px 26px rgba(0, 0, 0, 0.28);
 }
 
 .brave-card-wing {
   position: absolute;
-  top: 28px;
-  width: 48px;
-  height: 34px;
+  top: 38px;
+  width: 62px;
+  height: 42px;
   border-radius: 70% 20% 70% 20%;
-  background: var(--color-cream);
+  background: #eadbb8;
   box-shadow: inset -8px -6px 0 rgba(215, 164, 72, 0.28);
 }
 
@@ -562,21 +553,207 @@ h1 {
 
 .brave-card-runner-horn {
   position: absolute;
-  top: 5px;
-  width: 28px;
-  height: 18px;
-  border-radius: 999px 999px 0 0;
+  z-index: 1;
+  top: 9px;
+  width: 34px;
+  height: 23px;
+  border-radius: 999px 999px 0 999px;
   background: var(--color-cream);
 }
 
 .brave-card-runner-horn--left {
-  left: 29px;
-  transform: rotate(-30deg);
+  left: 25px;
+  transform: rotate(-28deg);
 }
 
 .brave-card-runner-horn--right {
-  right: 10px;
-  transform: rotate(28deg);
+  right: 23px;
+  transform: scaleX(-1) rotate(-28deg);
+}
+
+.brave-card-runner-mane {
+  position: absolute;
+  z-index: 2;
+  top: 17px;
+  left: 48px;
+  width: 38px;
+  height: 24px;
+  border-radius: 999px 999px 0 0;
+  background: #140c08;
+}
+
+.brave-card-runner-eye,
+.brave-card-runner-snout {
+  position: absolute;
+  z-index: 3;
+}
+
+.brave-card-runner-eye {
+  top: 42px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-cream);
+}
+
+.brave-card-runner-eye--left {
+  left: 55px;
+}
+
+.brave-card-runner-eye--right {
+  left: 73px;
+}
+
+.brave-card-runner-snout {
+  left: 50px;
+  bottom: 14px;
+  width: 36px;
+  height: 21px;
+  border-radius: 999px;
+  background: #3a2417;
+}
+
+.roulette-card-art {
+  position: absolute;
+  inset: 24px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(215, 164, 72, 0.2), transparent 36%),
+    linear-gradient(145deg, rgba(8, 24, 18, 0.96), rgba(5, 5, 5, 0.55));
+}
+
+.roulette-card-wheel {
+  position: relative;
+  display: block;
+  width: 190px;
+  height: 190px;
+  border: 12px solid #2c170d;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from -8deg,
+      #0b7f43 0 9.47deg,
+      #141414 9.47deg 18.94deg,
+      #c9152a 18.94deg 28.41deg,
+      #141414 28.41deg 37.88deg,
+      #c9152a 37.88deg 47.35deg,
+      #141414 47.35deg 56.82deg,
+      #c9152a 56.82deg 66.29deg,
+      #141414 66.29deg 75.76deg,
+      #c9152a 75.76deg 85.23deg,
+      #141414 85.23deg 94.7deg,
+      #c9152a 94.7deg 104.17deg,
+      #141414 104.17deg 113.64deg,
+      #c9152a 113.64deg 123.11deg,
+      #141414 123.11deg 132.58deg,
+      #c9152a 132.58deg 142.05deg,
+      #141414 142.05deg 151.52deg,
+      #c9152a 151.52deg 160.99deg,
+      #141414 160.99deg 170.46deg,
+      #c9152a 170.46deg 179.93deg,
+      #0b7f43 179.93deg 189.4deg,
+      #141414 189.4deg 198.87deg,
+      #c9152a 198.87deg 208.34deg,
+      #141414 208.34deg 217.81deg,
+      #c9152a 217.81deg 227.28deg,
+      #141414 227.28deg 236.75deg,
+      #c9152a 236.75deg 246.22deg,
+      #141414 246.22deg 255.69deg,
+      #c9152a 255.69deg 265.16deg,
+      #141414 265.16deg 274.63deg,
+      #c9152a 274.63deg 284.1deg,
+      #141414 284.1deg 293.57deg,
+      #c9152a 293.57deg 303.04deg,
+      #141414 303.04deg 312.51deg,
+      #c9152a 312.51deg 321.98deg,
+      #141414 321.98deg 331.45deg,
+      #c9152a 331.45deg 340.92deg,
+      #141414 340.92deg 350.39deg,
+      #c9152a 350.39deg 360deg
+    );
+  box-shadow:
+    inset 0 0 0 18px rgba(5, 5, 5, 0.52),
+    0 22px 42px rgba(0, 0, 0, 0.42);
+}
+
+.roulette-card-wheel::after {
+  position: absolute;
+  inset: 56px;
+  display: grid;
+  place-items: center;
+  content: "BB";
+  border: 2px solid rgba(240, 198, 106, 0.7);
+  border-radius: 50%;
+  color: var(--color-gold-bright);
+  background: #090806;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 900;
+}
+
+.roulette-card-wheel span {
+  position: absolute;
+  color: var(--color-cream);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.roulette-card-wheel span:nth-child(1) {
+  left: 84px;
+  top: 7px;
+}
+
+.roulette-card-wheel span:nth-child(2) {
+  right: 18px;
+  top: 84px;
+}
+
+.roulette-card-wheel span:nth-child(3) {
+  left: 84px;
+  bottom: 7px;
+}
+
+.roulette-card-wheel span:nth-child(4) {
+  left: 18px;
+  top: 84px;
+}
+
+.roulette-card-ball {
+  position: absolute;
+  top: 50px;
+  right: 78px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #f6ead0;
+  box-shadow: 0 0 18px rgba(246, 234, 208, 0.8);
+}
+
+.roulette-card-chip {
+  position: absolute;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 5px dashed rgba(246, 234, 208, 0.72);
+  border-radius: 50%;
+  color: var(--color-cream);
+  background: #c9152a;
+  font-weight: 950;
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.34);
+}
+
+.roulette-card-chip--one {
+  left: 18px;
+  bottom: 18px;
+}
+
+.roulette-card-chip--two {
+  right: 18px;
+  bottom: 26px;
+  background: #111;
 }
 
 .game-card__body {
@@ -1057,6 +1234,342 @@ body.brave-game-active {
   line-height: 1.55;
 }
 
+.roulette-layout {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.9fr) minmax(520px, 1.35fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.roulette-wheel-panel,
+.roulette-table-panel {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.roulette-wheel-panel {
+  display: grid;
+  gap: 18px;
+  align-content: center;
+  justify-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(215, 164, 72, 0.18), transparent 42%),
+    var(--color-panel);
+}
+
+.roulette-wheel-shell {
+  position: relative;
+  display: grid;
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  place-items: center;
+}
+
+.roulette-wheel {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  border: 16px solid #2a150b;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #090806 0 22%, transparent 22.5%),
+    conic-gradient(
+      from -4.7deg,
+      #0b7f43 0 9.47deg,
+      #141414 9.47deg 18.94deg,
+      #c9152a 18.94deg 28.41deg,
+      #141414 28.41deg 37.88deg,
+      #c9152a 37.88deg 47.35deg,
+      #141414 47.35deg 56.82deg,
+      #c9152a 56.82deg 66.29deg,
+      #141414 66.29deg 75.76deg,
+      #c9152a 75.76deg 85.23deg,
+      #141414 85.23deg 94.7deg,
+      #c9152a 94.7deg 104.17deg,
+      #141414 104.17deg 113.64deg,
+      #c9152a 113.64deg 123.11deg,
+      #141414 123.11deg 132.58deg,
+      #c9152a 132.58deg 142.05deg,
+      #141414 142.05deg 151.52deg,
+      #c9152a 151.52deg 160.99deg,
+      #141414 160.99deg 170.46deg,
+      #c9152a 170.46deg 179.93deg,
+      #0b7f43 179.93deg 189.4deg,
+      #141414 189.4deg 198.87deg,
+      #c9152a 198.87deg 208.34deg,
+      #141414 208.34deg 217.81deg,
+      #c9152a 217.81deg 227.28deg,
+      #141414 227.28deg 236.75deg,
+      #c9152a 236.75deg 246.22deg,
+      #141414 246.22deg 255.69deg,
+      #c9152a 255.69deg 265.16deg,
+      #141414 265.16deg 274.63deg,
+      #c9152a 274.63deg 284.1deg,
+      #141414 284.1deg 293.57deg,
+      #c9152a 293.57deg 303.04deg,
+      #141414 303.04deg 312.51deg,
+      #c9152a 312.51deg 321.98deg,
+      #141414 321.98deg 331.45deg,
+      #c9152a 331.45deg 340.92deg,
+      #141414 340.92deg 350.39deg,
+      #c9152a 350.39deg 360deg
+    );
+  box-shadow:
+    inset 0 0 0 34px rgba(5, 5, 5, 0.52),
+    inset 0 0 0 72px rgba(215, 164, 72, 0.12),
+    0 26px 70px rgba(0, 0, 0, 0.55);
+  transition: transform 4.2s cubic-bezier(0.12, 0.76, 0.18, 1);
+}
+
+.roulette-wheel-pocket {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 34px;
+  height: 22px;
+  margin: -11px 0 0 -17px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--color-cream);
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.roulette-wheel-pocket--green {
+  background: rgba(11, 127, 67, 0.9);
+}
+
+.roulette-wheel-pocket--red {
+  background: rgba(201, 21, 42, 0.78);
+}
+
+.roulette-wheel-pocket--black {
+  background: rgba(20, 20, 20, 0.82);
+}
+
+.roulette-wheel-center {
+  position: absolute;
+  inset: 118px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(240, 198, 106, 0.75);
+  border-radius: 50%;
+  color: var(--color-gold-bright);
+  background: #090806;
+}
+
+.roulette-wheel-center strong {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+}
+
+.roulette-ball {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: #f6ead0;
+  box-shadow:
+    0 0 16px rgba(246, 234, 208, 0.9),
+    0 4px 8px rgba(0, 0, 0, 0.38);
+  transition: transform 4.2s cubic-bezier(0.1, 0.78, 0.18, 1);
+}
+
+.roulette-result {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: min(100%, 420px);
+  padding: 14px;
+  border: 1px solid rgba(215, 164, 72, 0.35);
+  border-radius: var(--radius);
+  background: rgba(5, 5, 5, 0.48);
+  text-align: center;
+}
+
+.roulette-result span {
+  color: var(--color-gold-bright);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.roulette-result strong {
+  font-size: 1rem;
+}
+
+.roulette-history {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.roulette-history-empty {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.roulette-chip,
+.roulette-bet-chip {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 950;
+}
+
+.roulette-chip {
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(246, 234, 208, 0.4);
+  color: var(--color-cream);
+  font-size: 0.78rem;
+}
+
+.roulette-chip--green {
+  background: #0b7f43;
+}
+
+.roulette-chip--red {
+  background: #c9152a;
+}
+
+.roulette-chip--black {
+  background: #111;
+}
+
+.roulette-table-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(53, 255, 132, 0.08), transparent 36%),
+    var(--color-panel);
+}
+
+.roulette-control-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.roulette-chip-rack,
+.roulette-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.roulette-bet-chip {
+  width: 46px;
+  height: 46px;
+  border: 4px dashed rgba(246, 234, 208, 0.72);
+  color: var(--color-cream);
+  background: #971321;
+}
+
+.roulette-bet-chip.active {
+  outline: 3px solid var(--color-gold-bright);
+  outline-offset: 2px;
+}
+
+.roulette-felt {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 76px;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(53, 255, 132, 0.28);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(11, 127, 67, 0.88), rgba(14, 68, 45, 0.92)),
+    #0d5f3d;
+}
+
+.roulette-zeroes,
+.roulette-number-grid,
+.roulette-column-grid,
+.roulette-outside-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.roulette-zeroes {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.roulette-number-grid {
+  grid-template-columns: repeat(12, minmax(42px, 1fr));
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, 50px);
+}
+
+.roulette-column-grid {
+  grid-template-rows: repeat(3, 50px);
+}
+
+.roulette-outside-grid {
+  grid-column: 2 / 4;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roulette-number,
+.roulette-outside {
+  position: relative;
+  display: grid;
+  min-height: 50px;
+  place-items: center;
+  border: 1px solid rgba(246, 234, 208, 0.34);
+  border-radius: 6px;
+  color: var(--color-cream);
+  font-weight: 900;
+}
+
+.roulette-number--red,
+.roulette-outside--red {
+  background: #c9152a;
+}
+
+.roulette-number--black,
+.roulette-outside--black {
+  background: #111;
+}
+
+.roulette-number--green {
+  background: #0b7f43;
+}
+
+.roulette-outside {
+  background: rgba(5, 5, 5, 0.2);
+}
+
+.roulette-number strong,
+.roulette-outside strong {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: grid;
+  min-width: 24px;
+  min-height: 24px;
+  place-items: center;
+  border: 2px dashed rgba(246, 234, 208, 0.75);
+  border-radius: 50%;
+  color: var(--color-cream);
+  background: #971321;
+  font-size: 0.68rem;
+}
+
 .billiards-panel h2 {
   margin-bottom: 10px;
   font-family: var(--font-display);
@@ -1346,7 +1859,8 @@ input[type="range"] {
   .control-panel,
   .billiards-layout,
   .flappy-layout,
-  .brave-layout {
+  .brave-layout,
+  .roulette-layout {
     grid-template-columns: 1fr;
   }
 
@@ -1431,6 +1945,34 @@ input[type="range"] {
     max-height: 520px;
   }
 
+  .roulette-wheel {
+    width: 310px;
+    height: 310px;
+  }
+
+  .roulette-wheel-pocket {
+    transform-origin: 17px 166px;
+  }
+
+  .roulette-felt {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .roulette-number-grid {
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
+    grid-template-rows: repeat(6, 46px);
+  }
+
+  .roulette-column-grid {
+    grid-column: 1 / 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: 44px;
+  }
+
+  .roulette-outside-grid {
+    grid-column: 1 / 3;
+  }
+
   .pool-fullscreen-button,
   .flappy-fullscreen-button,
   .brave-fullscreen-button {
@@ -1476,6 +2018,24 @@ input[type="range"] {
 
   .table-stats {
     grid-template-columns: 1fr;
+  }
+
+  .roulette-table-panel,
+  .roulette-wheel-panel {
+    padding: 12px;
+  }
+
+  .roulette-felt {
+    padding: 10px;
+  }
+
+  .roulette-number-grid {
+    grid-template-columns: repeat(4, minmax(38px, 1fr));
+    grid-template-rows: repeat(9, 42px);
+  }
+
+  .roulette-outside-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .billiards-stats {

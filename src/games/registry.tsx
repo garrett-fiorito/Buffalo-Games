@@ -88,8 +88,34 @@ export const games: GameDefinition[] = [
           <span className="brave-card-wing brave-card-wing--right" />
           <span className="brave-card-runner-horn brave-card-runner-horn--left" />
           <span className="brave-card-runner-horn brave-card-runner-horn--right" />
+          <span className="brave-card-runner-mane" />
           <span className="brave-card-runner-face" />
+          <span className="brave-card-runner-eye brave-card-runner-eye--left" />
+          <span className="brave-card-runner-eye brave-card-runner-eye--right" />
+          <span className="brave-card-runner-snout" />
         </span>
+      </div>
+    ),
+  },
+  {
+    id: "roulette",
+    name: "Double Zero Roulette",
+    path: "/games/roulette",
+    description:
+      "Play American double-zero roulette with a polished wheel, casino felt betting table, chip rack, and accurate payouts.",
+    playTime: "Casino",
+    status: "Live",
+    art: (
+      <div className="roulette-card-art">
+        <span className="roulette-card-wheel">
+          <span>0</span>
+          <span>00</span>
+          <span>17</span>
+          <span>32</span>
+        </span>
+        <span className="roulette-card-ball" />
+        <span className="roulette-card-chip roulette-card-chip--one">25</span>
+        <span className="roulette-card-chip roulette-card-chip--two">100</span>
       </div>
     ),
   },

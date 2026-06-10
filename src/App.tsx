@@ -5,6 +5,7 @@ import { BlackjackPage } from "./games/blackjack/BlackjackPage";
 import { BilliardsPage } from "./games/billiards/BilliardsPage";
 import { BraveBuffaloPage } from "./games/brave/BraveBuffaloPage";
 import { FlappyBuffaloPage } from "./games/flappy/FlappyBuffaloPage";
+import { RoulettePage } from "./games/roulette/RoulettePage";
 
 export function App() {
   return (
@@ -15,6 +16,7 @@ export function App() {
         <Route path="/games/billiards" element={<BilliardsPage />} />
         <Route path="/games/flappy-buffalo" element={<FlappyBuffaloPage />} />
         <Route path="/games/brave-buffalo" element={<BraveBuffaloPage />} />
+        <Route path="/games/roulette" element={<RoulettePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SiteLayout>

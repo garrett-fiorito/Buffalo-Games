@@ -1,4 +1,4 @@
-import { Bird, CircleDot, Landmark, Rocket, Sparkles } from "lucide-react";
+import { Bird, CircleDollarSign, CircleDot, Landmark, Rocket, Sparkles } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 
@@ -53,6 +53,13 @@ export function SiteLayout({ children }: SiteLayoutProps) {
           >
             <Rocket size={17} aria-hidden="true" />
             Brave Buffalo
+          </NavLink>
+          <NavLink
+            to="/games/roulette"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <CircleDollarSign size={17} aria-hidden="true" />
+            Roulette
           </NavLink>
         </nav>
       </header>
