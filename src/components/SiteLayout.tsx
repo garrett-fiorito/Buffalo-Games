@@ -75,6 +75,13 @@ export function SiteLayout({ children }: SiteLayoutProps) {
             <Flag size={17} aria-hidden="true" />
             Mini Golf
           </NavLink>
+          <NavLink
+            to="/games/moon-landing"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <Rocket size={17} aria-hidden="true" />
+            Moon Landing
+          </NavLink>
         </nav>
       </header>
       <main>{children}</main>

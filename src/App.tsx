@@ -7,6 +7,7 @@ import { BraveBuffaloPage } from "./games/brave/BraveBuffaloPage";
 import { FlappyBuffaloPage } from "./games/flappy/FlappyBuffaloPage";
 import { HorseRacingPage } from "./games/horseracing/HorseRacingPage";
 import { MiniGolfPage } from "./games/minigolf/MiniGolfPage";
+import { MoonLandingPage } from "./games/moonlanding/MoonLandingPage";
 import { RoulettePage } from "./games/roulette/RoulettePage";
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
         <Route path="/games/flappy-buffalo" element={<FlappyBuffaloPage />} />
         <Route path="/games/horse-racing" element={<HorseRacingPage />} />
         <Route path="/games/mini-golf" element={<MiniGolfPage />} />
+        <Route path="/games/moon-landing" element={<MoonLandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SiteLayout>

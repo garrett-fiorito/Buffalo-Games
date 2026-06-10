@@ -114,6 +114,25 @@ export const games: GameDefinition[] = [
     ),
   },
   {
+    id: "moon-landing",
+    name: "Moon Landing",
+    path: "/games/moon-landing",
+    description:
+      "Pilot a lunar ship with limited fuel, land gently at gas stations, dodge asteroids, and reach new planets.",
+    playTime: "Endless",
+    status: "Live",
+    art: (
+      <div className="moon-card-art">
+        <span className="moon-card-planet" />
+        <span className="moon-card-ship" />
+        <span className="moon-card-flame" />
+        <span className="moon-card-station">FUEL</span>
+        <span className="moon-card-asteroid moon-card-asteroid--one" />
+        <span className="moon-card-asteroid moon-card-asteroid--two" />
+      </div>
+    ),
+  },
+  {
     id: "horse-racing",
     name: "Horse Racing",
     path: "/games/horse-racing",
