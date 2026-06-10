@@ -1031,7 +1031,7 @@ body.brave-game-active {
 }
 
 .brave-stage:fullscreen .brave-canvas {
-  width: min(100vw, calc((100vh - 24px) * 1.7307));
+  width: min(100vw, calc((100vh - 24px) * 2.3077));
   max-height: calc(100vh - 24px);
 }
 
@@ -1666,7 +1666,7 @@ input[type="range"] {
     --brave-mobile-canvas-width: calc(
       100dvw - env(safe-area-inset-left) - env(safe-area-inset-right) - 8px
     );
-    width: min(var(--brave-mobile-canvas-width), calc(var(--brave-mobile-canvas-height) * 1.7307));
+    width: min(var(--brave-mobile-canvas-width), calc(var(--brave-mobile-canvas-height) * 2.3077));
     height: auto;
     max-height: var(--brave-mobile-canvas-height);
     border: 0;

@@ -1,9 +1,9 @@
 import type { BraveObstacle, BraveState, ObstacleType } from "./braveTypes";
 
-export const BRAVE_WIDTH = 900;
+export const BRAVE_WIDTH = 1200;
 export const BRAVE_HEIGHT = 520;
 export const FLOOR_Y = 430;
-export const BUFFALO_X = 150;
+export const BUFFALO_X = 180;
 export const BUFFALO_WIDTH = 72;
 export const BUFFALO_HEIGHT = 54;
 export const HITBOX_INSET = 12;

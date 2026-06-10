@@ -481,53 +481,53 @@ function drawWingedBuffalo(
   distance: number,
   isBoosting: boolean,
 ): void {
-  const wingLift = isBoosting ? Math.sin(distance / 18) * 5 - 8 : Math.sin(distance / 28) * 3;
+  const wingLift = isBoosting ? Math.sin(distance / 14) * 6 - 9 : Math.sin(distance / 28) * 3;
 
   context.save();
   context.translate(BUFFALO_X, y);
 
   context.fillStyle = "rgba(0, 0, 0, 0.22)";
   context.beginPath();
-  context.ellipse(36, 56, 34, 9, 0, 0, Math.PI * 2);
+  context.ellipse(38, 57, 35, 8, 0, 0, Math.PI * 2);
   context.fill();
 
-  drawWing(context, 13, 29 + wingLift, -1);
-  drawWing(context, 59, 29 + wingLift, 1);
+  drawWing(context, 16, 34 + wingLift, -1);
+  drawWing(context, 60, 34 + wingLift, 1);
 
-  context.fillStyle = "#2b180f";
+  context.fillStyle = "#26170f";
   context.beginPath();
-  context.arc(36, 27, 24, 0, Math.PI * 2);
+  context.arc(38, 30, 25, 0, Math.PI * 2);
   context.fill();
 
   context.fillStyle = "#140c08";
   context.beginPath();
-  context.arc(36, 15, 23, Math.PI, 0);
+  context.arc(38, 18, 24, Math.PI, 0);
   context.fill();
 
   context.fillStyle = "#f6ead0";
   context.beginPath();
-  context.arc(14, 10, 15, Math.PI * 0.72, Math.PI * 1.58);
-  context.arc(58, 10, 15, Math.PI * 1.42, Math.PI * 0.28);
-  context.lineTo(56, 24);
-  context.lineTo(16, 24);
+  context.arc(18, 12, 17, Math.PI * 0.74, Math.PI * 1.58);
+  context.arc(58, 12, 17, Math.PI * 1.42, Math.PI * 0.26);
+  context.lineTo(57, 25);
+  context.lineTo(19, 25);
   context.closePath();
   context.fill();
 
   context.fillStyle = "#3a2417";
   context.beginPath();
-  context.ellipse(36, 35, 18, 12, 0, 0, Math.PI * 2);
+  context.ellipse(38, 38, 18, 12, 0, 0, Math.PI * 2);
   context.fill();
 
   context.fillStyle = "#f6ead0";
   context.beginPath();
-  context.arc(28, 24, 3.2, 0, Math.PI * 2);
-  context.arc(44, 24, 3.2, 0, Math.PI * 2);
+  context.arc(30, 27, 3.3, 0, Math.PI * 2);
+  context.arc(46, 27, 3.3, 0, Math.PI * 2);
   context.fill();
 
   context.fillStyle = "#050505";
   context.beginPath();
-  context.arc(31, 36, 2.2, 0, Math.PI * 2);
-  context.arc(41, 36, 2.2, 0, Math.PI * 2);
+  context.arc(33, 38, 2.2, 0, Math.PI * 2);
+  context.arc(43, 38, 2.2, 0, Math.PI * 2);
   context.fill();
 
   context.restore();
@@ -541,18 +541,20 @@ function drawWing(context: CanvasRenderingContext2D, x: number, y: number, direc
   context.fillStyle = "#f6ead0";
   context.beginPath();
   context.moveTo(0, 0);
-  context.quadraticCurveTo(-28, -24, -47, 3);
-  context.quadraticCurveTo(-25, 2, -14, 18);
-  context.quadraticCurveTo(-7, 9, 0, 0);
+  context.quadraticCurveTo(-31, -27, -56, 2);
+  context.quadraticCurveTo(-34, 4, -19, 23);
+  context.quadraticCurveTo(-10, 11, 0, 0);
   context.fill();
 
   context.strokeStyle = "rgba(43, 24, 15, 0.34)";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(-8, 5);
-  context.lineTo(-34, -2);
-  context.moveTo(-10, 9);
-  context.lineTo(-28, 12);
+  context.moveTo(-9, 5);
+  context.lineTo(-40, -2);
+  context.moveTo(-12, 10);
+  context.lineTo(-32, 15);
+  context.moveTo(-16, 15);
+  context.lineTo(-25, 22);
   context.stroke();
   context.restore();
 }
