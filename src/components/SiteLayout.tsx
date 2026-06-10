@@ -1,4 +1,4 @@
-import { Bird, CircleDot, Landmark, Sparkles } from "lucide-react";
+import { Bird, CircleDot, Landmark, Rocket, Sparkles } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 
@@ -46,6 +46,13 @@ export function SiteLayout({ children }: SiteLayoutProps) {
           >
             <Bird size={17} aria-hidden="true" />
             Flappy
+          </NavLink>
+          <NavLink
+            to="/games/brave-buffalo"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <Rocket size={17} aria-hidden="true" />
+            Brave
           </NavLink>
         </nav>
       </header>

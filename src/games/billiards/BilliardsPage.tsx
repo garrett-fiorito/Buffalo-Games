@@ -5,6 +5,7 @@ import { ArrowLeft, Maximize2, Minimize2, RotateCcw, Target } from "lucide-react
 import { Link } from "react-router-dom";
 import {
   BALL_RADIUS,
+  FOOT_SPOT,
   HEAD_SPOT,
   POCKET_RADIUS,
   SHOT_SPEED_MULTIPLIER,
@@ -16,6 +17,7 @@ import {
   findContainingPocket,
   getGroupLabel,
   getRulesSummary,
+  isOutOfTableBounds,
   isVelocityStopped,
   pockets,
 } from "./billiardsEngine";
@@ -39,6 +41,7 @@ type BilliardsViewState = {
   currentPlayer: PlayerId;
   assignments: PlayerAssignments;
   winner: PlayerId | null;
+  ballInHand: boolean;
 };
 
 type AimState = {
@@ -62,6 +65,7 @@ function createInitialViewState(): BilliardsViewState {
     currentPlayer: 1,
     assignments: createInitialAssignments(),
     winner: null,
+    ballInHand: false,
   };
 }
 
@@ -77,6 +81,8 @@ export function BilliardsPage() {
   const aimRef = useRef<AimState>({ active: false, pointer: HEAD_SPOT });
   const scratchPendingRef = useRef(false);
   const scratchThisShotRef = useRef(false);
+  const ballInHandRef = useRef(false);
+  const placingCueRef = useRef(false);
   const firstContactRef = useRef<BallKind | null>(null);
   const shotInProgressRef = useRef(false);
   const movingRef = useRef(false);
@@ -107,6 +113,8 @@ export function BilliardsPage() {
     pocketedBeforeShotRef.current = [];
     scratchPendingRef.current = false;
     scratchThisShotRef.current = false;
+    ballInHandRef.current = false;
+    placingCueRef.current = false;
     firstContactRef.current = null;
     shotInProgressRef.current = false;
     movingRef.current = false;
@@ -129,6 +137,7 @@ export function BilliardsPage() {
       firstContact: firstContactRef.current,
     });
 
+    const scratched = scratchThisShotRef.current;
     shotInProgressRef.current = false;
     scratchThisShotRef.current = false;
     firstContactRef.current = null;
@@ -137,12 +146,14 @@ export function BilliardsPage() {
     assignmentsRef.current = result.assignments;
     currentPlayerRef.current = result.currentPlayer;
     winnerRef.current = result.winner;
+    ballInHandRef.current = scratched && !result.winner;
 
     syncView({
       currentPlayer: result.currentPlayer,
       assignments: result.assignments,
       winner: result.winner,
       moving: false,
+      ballInHand: ballInHandRef.current,
       status: result.message,
     });
   }, [syncView]);
@@ -184,6 +195,7 @@ export function BilliardsPage() {
         scratchThisShotRef,
         syncView,
       );
+      recoverEscapedBalls(bodiesRef.current, syncView);
       const moving = !allBallsStopped(bodiesRef.current);
 
       if (moving !== movingRef.current) {
@@ -201,7 +213,15 @@ export function BilliardsPage() {
         finishShot();
       }
 
-      maybeRespawnCueBall(engine, ballsRef.current, bodiesRef.current, scratchPendingRef, movingRef, syncView);
+      maybeRespawnCueBall(
+        engine,
+        ballsRef.current,
+        bodiesRef.current,
+        scratchPendingRef,
+        ballInHandRef,
+        movingRef,
+        syncView,
+      );
 
       drawTable(canvasRef.current, ballsRef.current, bodiesRef.current, pocketedRef.current, aimRef.current);
       animationFrameRef.current = requestAnimationFrame(tick);
@@ -241,6 +261,15 @@ export function BilliardsPage() {
     }
 
     const pointer = eventToWorldPoint(event, event.currentTarget);
+
+    if (ballInHandRef.current) {
+      Body.setPosition(cueBody, getLegalCuePlacement(pointer, bodiesRef.current));
+      Body.setVelocity(cueBody, { x: 0, y: 0 });
+      Body.setAngularVelocity(cueBody, 0);
+      syncView({ aimingPower: 0, status: "Move the cue ball anywhere legal, then release to place it." });
+      return;
+    }
+
     const power = getAimPower(cueBody.position, pointer);
     aimRef.current = { active: true, pointer };
     syncView({ aimingPower: Math.round(power * 100), status: "Release to shoot." });
@@ -248,11 +277,16 @@ export function BilliardsPage() {
 
   const handlePointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
+
+    if (ballInHandRef.current && bodiesRef.current.has("cue") && !movingRef.current) {
+      placingCueRef.current = true;
+    }
+
     updateAimFromEvent(event);
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
-    if (!aimRef.current.active) {
+    if (!aimRef.current.active && !placingCueRef.current) {
       return;
     }
 
@@ -263,6 +297,18 @@ export function BilliardsPage() {
     event.currentTarget.releasePointerCapture(event.pointerId);
     const cueBody = bodiesRef.current.get("cue");
     const aim = aimRef.current;
+
+    if (placingCueRef.current) {
+      placingCueRef.current = false;
+      ballInHandRef.current = false;
+      aimRef.current = { active: false, pointer: HEAD_SPOT };
+      syncView({
+        ballInHand: false,
+        aimingPower: 0,
+        status: "Cue ball placed. Pull back from the cue ball and release to shoot.",
+      });
+      return;
+    }
 
     if (!cueBody || movingRef.current || !aim.active) {
       aimRef.current = { active: false, pointer: HEAD_SPOT };
@@ -346,7 +392,13 @@ export function BilliardsPage() {
       <div className="billiards-layout">
         <div ref={tableShellRef} className="pool-table-shell">
           <div className="pool-table-hud" aria-live="polite">
-            <span>{viewState.winner ? `Player ${viewState.winner} wins` : `Player ${viewState.currentPlayer}`}</span>
+            <span>
+              {viewState.winner
+                ? `Player ${viewState.winner} wins`
+                : viewState.ballInHand
+                  ? "Ball in hand"
+                  : `Player ${viewState.currentPlayer}`}
+            </span>
             <strong>{currentGroupLabel}</strong>
           </div>
           <button
@@ -366,6 +418,7 @@ export function BilliardsPage() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={() => {
+              placingCueRef.current = false;
               aimRef.current = { active: false, pointer: HEAD_SPOT };
               syncView({ aimingPower: 0 });
             }}
@@ -400,7 +453,7 @@ export function BilliardsPage() {
           </button>
           <p className="table-note">
             Pull back from the cue ball, then release. Pocket your group, then legally sink the 8.
-            Scratches return the cue ball to the head spot. On phones, rotate sideways for the full table view.
+            Scratches give the next player ball in hand. On phones, rotate sideways for the full table view.
           </p>
         </aside>
       </div>
@@ -536,6 +589,7 @@ function maybeRespawnCueBall(
   balls: BallDefinition[],
   bodies: Map<string, Matter.Body>,
   scratchPending: MutableRefObject<boolean>,
+  ballInHand: MutableRefObject<boolean>,
   moving: MutableRefObject<boolean>,
   syncView: (updates: Partial<BilliardsViewState>) => void,
 ) {
@@ -562,7 +616,40 @@ function maybeRespawnCueBall(
     bodies.set("cue", cueBody);
     Composite.add(engine.world, cueBody);
     scratchPending.current = false;
-    syncView({ status: "Cue ball reset. Line up the next shot." });
+    syncView({
+      ballInHand: ballInHand.current,
+      status: ballInHand.current
+        ? "Ball in hand. Move the cue ball anywhere legal, then release to place it."
+        : "Cue ball reset. Line up the next shot.",
+    });
+  }
+}
+
+function recoverEscapedBalls(
+  bodies: Map<string, Matter.Body>,
+  syncView: (updates: Partial<BilliardsViewState>) => void,
+) {
+  let recoveredCount = 0;
+
+  bodies.forEach((body, id) => {
+    if (!isOutOfTableBounds(body.position)) {
+      return;
+    }
+
+    const spot = id === "cue" ? getOpenCueSpot(bodies) : getOpenObjectSpot(bodies, id);
+    Body.setPosition(body, spot);
+    Body.setVelocity(body, { x: 0, y: 0 });
+    Body.setAngularVelocity(body, 0);
+    recoveredCount += 1;
+  });
+
+  if (recoveredCount > 0) {
+    syncView({
+      status:
+        recoveredCount === 1
+          ? "Recovered a ball that left the table."
+          : `Recovered ${recoveredCount} balls that left the table.`,
+    });
   }
 }
 
@@ -612,6 +699,75 @@ function getOpenCueSpot(bodies: Map<string, Matter.Body>): Vector2 {
     candidateSpots.find((spot) =>
       Array.from(bodies.values()).every((body) => Math.hypot(body.position.x - spot.x, body.position.y - spot.y) > BALL_RADIUS * 2.3),
     ) ?? HEAD_SPOT
+  );
+}
+
+function getLegalCuePlacement(pointer: Vector2, bodies: Map<string, Matter.Body>): Vector2 {
+  const baseSpot = clampToTable(pointer);
+
+  if (isCueSpotOpen(baseSpot, bodies)) {
+    return baseSpot;
+  }
+
+  const searchOffsets = [
+    { x: 32, y: 0 },
+    { x: -32, y: 0 },
+    { x: 0, y: 32 },
+    { x: 0, y: -32 },
+    { x: 46, y: 46 },
+    { x: -46, y: 46 },
+    { x: 46, y: -46 },
+    { x: -46, y: -46 },
+    { x: 68, y: 0 },
+    { x: -68, y: 0 },
+    { x: 0, y: 68 },
+    { x: 0, y: -68 },
+  ];
+
+  return (
+    searchOffsets
+      .map((offset) => clampToTable({ x: baseSpot.x + offset.x, y: baseSpot.y + offset.y }))
+      .find((spot) => isCueSpotOpen(spot, bodies)) ?? getOpenCueSpot(bodies)
+  );
+}
+
+function clampToTable(point: Vector2): Vector2 {
+  const inset = BALL_RADIUS + 8;
+
+  return {
+    x: Math.min(TABLE_WIDTH - inset, Math.max(inset, point.x)),
+    y: Math.min(TABLE_HEIGHT - inset, Math.max(inset, point.y)),
+  };
+}
+
+function isCueSpotOpen(spot: Vector2, bodies: Map<string, Matter.Body>): boolean {
+  return Array.from(bodies.entries()).every(
+    ([id, body]) =>
+      id === "cue" ||
+      Math.hypot(body.position.x - spot.x, body.position.y - spot.y) > BALL_RADIUS * 2.35,
+  );
+}
+
+function getOpenObjectSpot(bodies: Map<string, Matter.Body>, movingBallId: string): Vector2 {
+  const candidateSpots: Vector2[] = [
+    FOOT_SPOT,
+    { x: FOOT_SPOT.x + 42, y: FOOT_SPOT.y - 30 },
+    { x: FOOT_SPOT.x + 42, y: FOOT_SPOT.y + 30 },
+    { x: FOOT_SPOT.x + 82, y: FOOT_SPOT.y },
+    { x: FOOT_SPOT.x - 42, y: FOOT_SPOT.y - 36 },
+    { x: FOOT_SPOT.x - 42, y: FOOT_SPOT.y + 36 },
+    { x: TABLE_WIDTH / 2, y: TABLE_HEIGHT / 2 },
+  ];
+
+  return (
+    candidateSpots.find((spot) =>
+      Array.from(bodies.entries()).every(
+        ([id, body]) =>
+          id === movingBallId ||
+          Math.hypot(body.position.x - spot.x, body.position.y - spot.y) >
+            BALL_RADIUS * 2.4,
+      ),
+    ) ?? FOOT_SPOT
   );
 }
 

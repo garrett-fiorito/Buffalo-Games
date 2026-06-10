@@ -161,7 +161,8 @@ a {
 .lobby-view,
 .blackjack-view,
 .billiards-view,
-.flappy-view {
+.flappy-view,
+.brave-view {
   display: grid;
   gap: 28px;
 }
@@ -439,6 +440,142 @@ h1 {
   height: 25px;
   border-radius: 999px;
   background: #3a2417;
+}
+
+.brave-card-art {
+  position: absolute;
+  inset: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 32% 42%, rgba(255, 157, 61, 0.22), transparent 32%),
+    linear-gradient(145deg, rgba(22, 30, 52, 0.95), rgba(13, 95, 61, 0.58));
+}
+
+.brave-card-art::before {
+  position: absolute;
+  right: -20px;
+  bottom: 24px;
+  left: -20px;
+  height: 42px;
+  content: "";
+  border-top: 4px solid #35ff84;
+  background:
+    repeating-linear-gradient(90deg, rgba(246, 234, 208, 0.2) 0 24px, transparent 24px 54px),
+    #25180f;
+}
+
+.brave-card-speedline {
+  position: absolute;
+  left: 20px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(246, 234, 208, 0.46);
+}
+
+.brave-card-speedline--one {
+  top: 62px;
+  width: 114px;
+}
+
+.brave-card-speedline--two {
+  top: 112px;
+  width: 78px;
+  background: rgba(53, 255, 132, 0.52);
+}
+
+.brave-card-hazard {
+  position: absolute;
+  right: 38px;
+  bottom: 56px;
+  display: block;
+}
+
+.brave-card-hazard--tower {
+  width: 42px;
+  height: 104px;
+  border: 2px solid rgba(246, 234, 208, 0.28);
+  background:
+    repeating-linear-gradient(180deg, #f0c66a 0 12px, #141414 12px 24px),
+    #141414;
+}
+
+.brave-card-hazard--drone {
+  right: 108px;
+  bottom: 158px;
+  width: 78px;
+  height: 34px;
+  border: 2px solid rgba(246, 234, 208, 0.28);
+  border-radius: 999px;
+  background: #2e3f55;
+}
+
+.brave-card-runner {
+  position: absolute;
+  left: 48px;
+  bottom: 82px;
+  width: 112px;
+  height: 76px;
+  transform: rotate(-6deg);
+}
+
+.brave-card-runner::before {
+  position: absolute;
+  right: 10px;
+  bottom: 13px;
+  left: 26px;
+  height: 34px;
+  content: "";
+  border-radius: 999px;
+  background: #6f3e24;
+}
+
+.brave-card-runner-face {
+  position: absolute;
+  left: 40px;
+  top: 10px;
+  width: 46px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2d1a10;
+}
+
+.brave-card-runner-horn {
+  position: absolute;
+  top: 5px;
+  width: 28px;
+  height: 18px;
+  border-radius: 999px 999px 0 0;
+  background: var(--color-cream);
+}
+
+.brave-card-runner-horn--left {
+  left: 29px;
+  transform: rotate(-30deg);
+}
+
+.brave-card-runner-horn--right {
+  right: 10px;
+  transform: rotate(28deg);
+}
+
+.brave-card-jetpack {
+  position: absolute;
+  left: 10px;
+  bottom: 22px;
+  width: 24px;
+  height: 28px;
+  border-radius: 5px;
+  background: #30363d;
+}
+
+.brave-card-flame {
+  position: absolute;
+  left: 13px;
+  bottom: -8px;
+  width: 18px;
+  height: 36px;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: linear-gradient(180deg, #fff2a8, #ff9d3d 52%, rgba(255, 61, 90, 0));
 }
 
 .game-card__body {
@@ -719,6 +856,13 @@ h1 {
   align-items: stretch;
 }
 
+.brave-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.32fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
 .flappy-stage {
   position: relative;
   display: grid;
@@ -809,6 +953,111 @@ h1 {
 .flappy-panel p {
   color: var(--color-muted);
   line-height: 1.55;
+}
+
+.brave-stage {
+  position: relative;
+  display: grid;
+  min-height: 560px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(5, 5, 5, 0.7), rgba(22, 30, 52, 0.58)),
+    #050505;
+  box-shadow: var(--shadow-soft);
+  touch-action: none;
+}
+
+.brave-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 170px);
+  border: 1px solid rgba(246, 234, 208, 0.12);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.brave-fullscreen-button {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(53, 255, 132, 0.34);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.72);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.brave-fullscreen-button:hover {
+  border-color: rgba(53, 255, 132, 0.72);
+}
+
+.brave-stage:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #050505;
+}
+
+.brave-stage:fullscreen .brave-canvas {
+  width: min(100vw, calc((100vh - 24px) * 1.7307));
+  max-height: calc(100vh - 24px);
+}
+
+.brave-panel {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-panel);
+}
+
+.brave-panel h2 {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.brave-panel p {
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.brave-bonus-readout {
+  display: grid;
+  gap: 4px;
+  min-height: 70px;
+  padding: 14px;
+  border: 1px solid rgba(53, 255, 132, 0.24);
+  border-radius: var(--radius);
+  background: rgba(53, 255, 132, 0.06);
+}
+
+.brave-bonus-readout span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.brave-bonus-readout strong {
+  color: var(--color-cream);
+  font-size: 1rem;
 }
 
 .billiards-panel h2 {
@@ -1099,7 +1348,8 @@ input[type="range"] {
   .table-hero,
   .control-panel,
   .billiards-layout,
-  .flappy-layout {
+  .flappy-layout,
+  .brave-layout {
     grid-template-columns: 1fr;
   }
 
@@ -1131,11 +1381,20 @@ input[type="range"] {
 
   .site-nav {
     justify-content: stretch;
+    flex-wrap: wrap;
   }
 
   .site-nav a {
-    flex: 1;
+    flex: 1 1 calc(33.333% - 8px);
     justify-content: center;
+    min-width: 104px;
+    padding: 0 8px;
+  }
+
+  .lobby-view {
+    min-height: auto;
+    align-content: start;
+    padding: 28px 0 36px;
   }
 
   .game-card {
@@ -1167,8 +1426,17 @@ input[type="range"] {
     max-height: 620px;
   }
 
+  .brave-stage {
+    min-height: 380px;
+  }
+
+  .brave-canvas {
+    max-height: 520px;
+  }
+
   .pool-fullscreen-button,
-  .flappy-fullscreen-button {
+  .flappy-fullscreen-button,
+  .brave-fullscreen-button {
     display: none;
   }
 
@@ -1205,6 +1473,10 @@ input[type="range"] {
     font-size: 1.85rem;
   }
 
+  .site-nav a {
+    flex-basis: calc(50% - 8px);
+  }
+
   .table-stats {
     grid-template-columns: 1fr;
   }
@@ -1238,7 +1510,8 @@ input[type="range"] {
 
 @media (pointer: coarse) {
   .pool-fullscreen-button,
-  .flappy-fullscreen-button {
+  .flappy-fullscreen-button,
+  .brave-fullscreen-button {
     display: none;
   }
 }
@@ -1342,5 +1615,64 @@ input[type="range"] {
     left: max(8px, env(safe-area-inset-left));
     min-width: 92px;
     padding: 6px 8px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body.brave-game-active {
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background: #050505;
+  }
+
+  body.brave-game-active .site-shell {
+    width: 100dvw;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  body.brave-game-active .site-header,
+  body.brave-game-active .brave-hero,
+  body.brave-game-active .brave-panel {
+    display: none;
+  }
+
+  body.brave-game-active main,
+  body.brave-game-active .brave-view,
+  body.brave-game-active .brave-layout {
+    display: block;
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body.brave-game-active .brave-stage {
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #050505;
+  }
+
+  body.brave-game-active .brave-canvas {
+    --brave-mobile-canvas-height: max(
+      260px,
+      calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 44px)
+    );
+    --brave-mobile-canvas-width: calc(
+      100dvw - env(safe-area-inset-left) - env(safe-area-inset-right) - 8px
+    );
+    width: min(var(--brave-mobile-canvas-width), calc(var(--brave-mobile-canvas-height) * 1.7307));
+    height: auto;
+    max-height: var(--brave-mobile-canvas-height);
+    border: 0;
+    border-radius: 0;
   }
 }

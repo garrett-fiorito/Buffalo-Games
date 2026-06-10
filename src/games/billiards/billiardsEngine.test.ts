@@ -11,6 +11,7 @@ import {
   getOpponent,
   getPracticeSummary,
   getRulesSummary,
+  isOutOfTableBounds,
   isVelocityStopped,
 } from "./billiardsEngine";
 import type { PocketedBall } from "./billiardsTypes";
@@ -55,6 +56,12 @@ describe("billiards setup", () => {
   it("detects stopped velocities", () => {
     expect(isVelocityStopped({ x: 0.03, y: 0.04 })).toBe(true);
     expect(isVelocityStopped({ x: 0.5, y: 0 })).toBe(false);
+  });
+
+  it("detects physics escape positions outside the table safety margin", () => {
+    expect(isOutOfTableBounds({ x: -140, y: 250 })).toBe(true);
+    expect(isOutOfTableBounds({ x: 1040, y: 250 })).toBe(false);
+    expect(isOutOfTableBounds({ x: Number.NaN, y: 250 })).toBe(true);
   });
 
   it("summarizes pocketed practice balls", () => {

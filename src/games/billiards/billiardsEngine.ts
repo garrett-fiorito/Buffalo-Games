@@ -19,6 +19,7 @@ export const HEAD_SPOT: Vector2 = { x: 260, y: TABLE_HEIGHT / 2 };
 export const FOOT_SPOT: Vector2 = { x: 695, y: TABLE_HEIGHT / 2 };
 export const STOP_SPEED = 0.08;
 export const SHOT_SPEED_MULTIPLIER = 31;
+export const OUT_OF_BOUNDS_MARGIN = 96;
 
 const rackRows = [[1], [9, 2], [3, 8, 10], [11, 4, 12, 5], [6, 13, 7, 14, 15]];
 const rackLooseness: Record<number, Vector2> = {
@@ -252,6 +253,20 @@ export function distance(a: Vector2, b: Vector2): number {
 
 export function findContainingPocket(position: Vector2, radius = POCKET_RADIUS): Pocket | null {
   return pockets.find((pocket) => distance(position, pocket) <= radius) ?? null;
+}
+
+export function isOutOfTableBounds(
+  position: Vector2,
+  margin = OUT_OF_BOUNDS_MARGIN,
+): boolean {
+  return (
+    !Number.isFinite(position.x) ||
+    !Number.isFinite(position.y) ||
+    position.x < -margin ||
+    position.x > TABLE_WIDTH + margin ||
+    position.y < -margin ||
+    position.y > TABLE_HEIGHT + margin
+  );
 }
 
 export function isVelocityStopped(velocity: Vector2, threshold = STOP_SPEED): boolean {

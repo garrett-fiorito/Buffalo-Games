@@ -69,4 +69,28 @@ export const games: GameDefinition[] = [
       </div>
     ),
   },
+  {
+    id: "brave-buffalo",
+    name: "Brave Buffalo",
+    path: "/games/brave-buffalo",
+    description:
+      "Hold to fire the jetpack, release to drop, dodge six hazard types, collect sparks, and chase your best distance.",
+    playTime: "Endless",
+    status: "Live",
+    art: (
+      <div className="brave-card-art">
+        <span className="brave-card-speedline brave-card-speedline--one" />
+        <span className="brave-card-speedline brave-card-speedline--two" />
+        <span className="brave-card-hazard brave-card-hazard--tower" />
+        <span className="brave-card-hazard brave-card-hazard--drone" />
+        <span className="brave-card-runner">
+          <span className="brave-card-runner-horn brave-card-runner-horn--left" />
+          <span className="brave-card-runner-horn brave-card-runner-horn--right" />
+          <span className="brave-card-runner-face" />
+          <span className="brave-card-jetpack" />
+          <span className="brave-card-flame" />
+        </span>
+      </div>
+    ),
+  },
 ];
