@@ -23,7 +23,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     ],
     hazards: [
       { id: "starter-water", kind: "water", x: 270, y: 268, width: 195, height: 72 },
-      { id: "starter-sand", kind: "sand", x: 736, y: 64, width: 190, height: 94 },
+      { id: "starter-sand", kind: "sand", x: 704, y: 258, width: 150, height: 82 },
     ],
   },
   {
@@ -41,7 +41,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     hazards: [
       { id: "canal-water-top", kind: "water", x: 400, y: 214, width: 206, height: 66 },
       { id: "canal-water-bottom", kind: "water", x: 400, y: 320, width: 206, height: 66 },
-      { id: "canal-sand", kind: "sand", x: 760, y: 238, width: 120, height: 124 },
+      { id: "canal-sand", kind: "sand", x: 732, y: 112, width: 132, height: 82 },
     ],
   },
   {
@@ -59,7 +59,7 @@ export const miniGolfHoles: MiniGolfHole[] = [
     hazards: [
       { id: "gate-water", kind: "water", x: 424, y: 426, width: 250, height: 82 },
       { id: "gate-sand-left", kind: "sand", x: 680, y: 62, width: 86, height: 128 },
-      { id: "gate-sand-right", kind: "sand", x: 876, y: 82, width: 72, height: 132 },
+      { id: "gate-sand-right", kind: "sand", x: 858, y: 238, width: 92, height: 112 },
     ],
   },
 ];

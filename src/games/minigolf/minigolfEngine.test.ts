@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  BALL_RADIUS,
   COURSE_HEIGHT,
   COURSE_WIDTH,
+  CUP_RADIUS,
   CUP_CAPTURE_SPEED,
   findHazard,
   getAimPower,
@@ -15,6 +17,7 @@ import {
   isVelocityStopped,
   miniGolfHoles,
 } from "./minigolfEngine";
+import type { HazardZone } from "./minigolfTypes";
 
 describe("mini golf course", () => {
   it("defines three playable holes with starts and cups inside the course", () => {
@@ -26,10 +29,23 @@ describe("mini golf course", () => {
       expect(isInsideCourse(hole.cup)).toBe(true);
       expect(hole.walls.length).toBeGreaterThan(0);
       expect(hole.hazards.length).toBeGreaterThan(0);
+      expect(findHazard(hole.start, hole.hazards)).toBeNull();
+      expect(findHazard(hole.cup, hole.hazards)).toBeNull();
       expect(hole.start.x).toBeGreaterThanOrEqual(0);
       expect(hole.cup.x).toBeLessThanOrEqual(COURSE_WIDTH);
       expect(hole.start.y).toBeGreaterThanOrEqual(0);
       expect(hole.cup.y).toBeLessThanOrEqual(COURSE_HEIGHT);
+    });
+  });
+
+  it("keeps each tee and cup clear of hazard hitboxes", () => {
+    const minimumClearance = CUP_RADIUS + BALL_RADIUS + 22;
+
+    miniGolfHoles.forEach((hole) => {
+      hole.hazards.forEach((hazard) => {
+        expect(getDistanceToRect(hole.start, hazard)).toBeGreaterThan(minimumClearance);
+        expect(getDistanceToRect(hole.cup, hazard)).toBeGreaterThan(minimumClearance);
+      });
     });
   });
 
@@ -56,7 +72,7 @@ describe("mini golf rules helpers", () => {
     const hazards = miniGolfHoles[0].hazards;
 
     expect(findHazard({ x: 300, y: 290 }, hazards)?.kind).toBe("water");
-    expect(findHazard({ x: 790, y: 100 }, hazards)?.kind).toBe("sand");
+    expect(findHazard({ x: 790, y: 300 }, hazards)?.kind).toBe("sand");
     expect(findHazard({ x: 100, y: 100 }, hazards)).toBeNull();
   });
 
@@ -73,3 +89,10 @@ describe("mini golf rules helpers", () => {
     expect(isVelocityStopped({ x: 0.12, y: 0 })).toBe(false);
   });
 });
+
+function getDistanceToRect(point: { x: number; y: number }, rect: HazardZone): number {
+  const nearestX = Math.max(rect.x, Math.min(point.x, rect.x + rect.width));
+  const nearestY = Math.max(rect.y, Math.min(point.y, rect.y + rect.height));
+
+  return Math.hypot(point.x - nearestX, point.y - nearestY);
+}
