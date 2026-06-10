@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CircleDollarSign, Play, RotateCcw, Ticket } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleDollarSign,
+  Maximize2,
+  Minimize2,
+  Play,
+  RotateCcw,
+  Ticket,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   MAX_HORSE_BET,
@@ -23,17 +31,23 @@ const TABLE_WIDTH = 1040;
 const TABLE_HEIGHT = 640;
 
 export function HorseRacingPage() {
+  const initialSessionRef = useRef(createHorseRaceSession());
+  const tableShellRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const raceStartRef = useRef<number | null>(null);
-  const stateRef = useRef<HorseRaceState>(createInitialHorseRaceState());
-  const planRef = useRef<RacePlanEntry[]>(createRacePlan(0));
+  const stateRef = useRef<HorseRaceState>(initialSessionRef.current.state);
+  const planRef = useRef<RacePlanEntry[]>(initialSessionRef.current.plan);
   const [state, setState] = useState(stateRef.current);
   const [racePlan, setRacePlan] = useState(planRef.current);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const totalBet = state.bets.reduce((sum, bet) => sum + bet.amount, 0);
-  const bettingBoard = useMemo(() => getBettingBoard(state.raceNumber), [state.raceNumber]);
+  const bettingBoard = useMemo(
+    () => getBettingBoard(state.raceNumber, state.raceSeed),
+    [state.raceNumber, state.raceSeed],
+  );
   const selectedBoardBet = bettingBoard.find(
     (bet) =>
       bet.kind === state.selectedKind &&
@@ -55,7 +69,7 @@ export function HorseRacingPage() {
       return;
     }
 
-    const plan = createRacePlan(state.raceNumber);
+    const plan = createRacePlan(state.raceNumber, state.raceSeed);
     planRef.current = plan;
     setRacePlan(plan);
     setElapsedMs(0);
@@ -64,18 +78,40 @@ export function HorseRacingPage() {
   };
 
   const handleReset = () => {
-    const next = createInitialHorseRaceState();
-    stateRef.current = next;
-    planRef.current = createRacePlan(0);
+    const nextSession = createHorseRaceSession();
+    stateRef.current = nextSession.state;
+    planRef.current = nextSession.plan;
     raceStartRef.current = null;
-    setState(next);
+    setState(nextSession.state);
     setRacePlan(planRef.current);
     setElapsedMs(0);
   };
 
+  const toggleFullscreen = useCallback(async () => {
+    if (!tableShellRef.current || !document.fullscreenEnabled) {
+      return;
+    }
+
+    if (document.fullscreenElement === tableShellRef.current) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await tableShellRef.current.requestFullscreen();
+  }, []);
+
   useEffect(() => {
     drawHorseTable(canvasRef.current, racePlan, elapsedMs, state);
   }, [elapsedMs, racePlan, state]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === tableShellRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     const tick = (timestamp: number) => {
@@ -122,7 +158,16 @@ export function HorseRacingPage() {
       </div>
 
       <div className="horse-layout">
-        <div className="horse-table-shell">
+        <div ref={tableShellRef} className="horse-table-shell">
+          <button
+            className="horse-fullscreen-button"
+            type="button"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Play horse racing fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
+            <span>{isFullscreen ? "Exit" : "Fullscreen"}</span>
+          </button>
           <canvas
             ref={canvasRef}
             className="horse-canvas"
@@ -277,6 +322,15 @@ function getBetLabel(bet: HorseBet): string {
   return bet.kind === "winner" ? `${bet.first} winner` : `${bet.first}-${bet.second}`;
 }
 
+function createHorseRaceSession(): { state: HorseRaceState; plan: RacePlanEntry[] } {
+  const state = createInitialHorseRaceState();
+
+  return {
+    state,
+    plan: createRacePlan(state.raceNumber, state.raceSeed),
+  };
+}
+
 function drawHorseTable(
   canvas: HTMLCanvasElement | null,
   plan: RacePlanEntry[],
@@ -350,17 +404,23 @@ function drawTrack(context: CanvasRenderingContext2D) {
 
 function drawFinishPost(context: CanvasRenderingContext2D) {
   context.save();
-  context.translate(TABLE_WIDTH / 2 + 408, TABLE_HEIGHT / 2 + 12);
+  context.translate(TABLE_WIDTH / 2, TABLE_HEIGHT / 2 + 12);
   context.strokeStyle = "#f6ead0";
-  context.lineWidth = 5;
-  context.beginPath();
-  context.moveTo(0, -188);
-  context.lineTo(0, -116);
-  context.stroke();
+  context.lineWidth = 4;
+
+  for (let index = 0; index < 8; index += 1) {
+    context.fillStyle = index % 2 === 0 ? "#f6ead0" : "#c7463a";
+    context.fillRect(-12, -214 + index * 14, 24, 14);
+  }
+
   context.fillStyle = "#c7463a";
-  context.fillRect(0, -188, 46, 18);
+  context.fillRect(8, -274, 58, 22);
   context.fillStyle = "#f6ead0";
-  context.fillRect(0, -170, 46, 18);
+  context.fillRect(8, -252, 58, 22);
+  context.beginPath();
+  context.moveTo(0, -274);
+  context.lineTo(0, -102);
+  context.stroke();
   context.restore();
 }
 

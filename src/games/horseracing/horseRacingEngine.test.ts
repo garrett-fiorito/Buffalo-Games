@@ -76,6 +76,15 @@ describe("horseRacingEngine", () => {
     expect(Math.max(...plan.map((entry) => entry.finishTimeMs))).toBeGreaterThan(24000);
   });
 
+  it("varies the first race when the session seed changes", () => {
+    const firstSession = createRacePlan(0, 12345);
+    const secondSession = createRacePlan(0, 98765);
+
+    expect(secondSession.map((entry) => entry.finishTimeMs)).not.toEqual(
+      firstSession.map((entry) => entry.finishTimeMs),
+    );
+  });
+
   it("settles winning exacta and winner bets by odds", () => {
     const bets: HorseBet[] = [
       { id: "winner-pick", kind: "winner", first: 3, amount: 10, odds: 5 },

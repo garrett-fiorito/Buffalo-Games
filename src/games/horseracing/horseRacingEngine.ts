@@ -22,7 +22,7 @@ export const horses: HorseDefinition[] = [
   { id: 6, name: "Velvet Six", color: "#c46cff", rating: 69 },
 ];
 
-export function createInitialHorseRaceState(): HorseRaceState {
+export function createInitialHorseRaceState(raceSeed = createHorseRaceSeed()): HorseRaceState {
   return {
     chips: STARTING_HORSE_CHIPS,
     phase: "betting",
@@ -32,8 +32,13 @@ export function createInitialHorseRaceState(): HorseRaceState {
     betAmount: 10,
     bets: [],
     raceNumber: 0,
+    raceSeed,
     lastResult: null,
   };
+}
+
+export function createHorseRaceSeed(): number {
+  return Math.floor(Date.now() % 1_000_000) + Math.floor(Math.random() * 1_000_000);
 }
 
 export function setHorseBetAmount(state: HorseRaceState, amount: number): HorseRaceState {
@@ -68,8 +73,8 @@ export function placeHorseBet(state: HorseRaceState): HorseRaceState {
 
   const odds =
     state.selectedKind === "winner"
-      ? getWinnerOdds(state.selectedFirst, state.raceNumber)
-      : getExactaOdds(state.selectedFirst, state.selectedSecond as HorseId, state.raceNumber);
+      ? getWinnerOdds(state.selectedFirst, state.raceNumber, state.raceSeed)
+      : getExactaOdds(state.selectedFirst, state.selectedSecond as HorseId, state.raceNumber, state.raceSeed);
   const id = `${state.raceNumber}-${state.selectedKind}-${state.selectedFirst}-${state.selectedSecond ?? "win"}-${state.bets.length}`;
 
   return {
@@ -144,12 +149,12 @@ export function settleHorseRace(bets: HorseBet[], finishOrder: HorseId[]): Horse
   };
 }
 
-export function createRacePlan(raceNumber: number): RacePlanEntry[] {
+export function createRacePlan(raceNumber: number, raceSeed = 0): RacePlanEntry[] {
   const scored = horses.map((horse, index) => {
-    const variance = seededNoise(raceNumber, horse.id) * 92;
-    const tripChaos = seededNoise(raceNumber + horse.id * 13, horse.id + 7) * 28;
+    const variance = seededNoise(raceNumber, horse.id, raceSeed) * 104;
+    const tripChaos = seededNoise(raceNumber + horse.id * 13, horse.id + 7, raceSeed) * 34;
     const fatigue = ((raceNumber + horse.id * 3) % 5) * 4.2;
-    const score = horse.rating * 0.24 + variance + tripChaos - fatigue;
+    const score = horse.rating * 0.16 + variance + tripChaos - fatigue;
 
     return {
       horse,
@@ -165,8 +170,8 @@ export function createRacePlan(raceNumber: number): RacePlanEntry[] {
     return {
       horseId: horse.id,
       lane: index,
-      finishTimeMs: 22600 + rank * 920 + seededNoise(raceNumber + 11, horse.id) * 1350,
-      surge: seededNoise(raceNumber + 23, horse.id),
+      finishTimeMs: 22600 + rank * 920 + seededNoise(raceNumber + 11, horse.id, raceSeed) * 1350,
+      surge: seededNoise(raceNumber + 23, horse.id, raceSeed),
     };
   });
 }
@@ -175,7 +180,7 @@ export function getFinishOrder(plan: RacePlanEntry[]): HorseId[] {
   return [...plan].sort((a, b) => a.finishTimeMs - b.finishTimeMs).map((entry) => entry.horseId);
 }
 
-export function getExactaOdds(first: HorseId, second: HorseId, raceNumber: number): number {
+export function getExactaOdds(first: HorseId, second: HorseId, raceNumber: number, raceSeed = 0): number {
   if (first === second) {
     return 0;
   }
@@ -184,26 +189,26 @@ export function getExactaOdds(first: HorseId, second: HorseId, raceNumber: numbe
   const secondHorse = getHorse(second);
   const favoritePressure = (firstHorse.rating + secondHorse.rating) / 2;
   const longshotBonus = Math.max(0, 92 - favoritePressure) / 2.2;
-  const boardWobble = Math.floor(seededNoise(raceNumber + first * 5, second) * 8);
+  const boardWobble = Math.floor(seededNoise(raceNumber + first * 5, second, raceSeed) * 8);
 
   return clamp(Math.round(9 + longshotBonus + boardWobble + Math.abs(first - second) * 1.1), 8, 45);
 }
 
-export function getWinnerOdds(horseId: HorseId, raceNumber: number): number {
+export function getWinnerOdds(horseId: HorseId, raceNumber: number, raceSeed = 0): number {
   const horse = getHorse(horseId);
   const longshotBonus = Math.max(0, 94 - horse.rating) / 7.5;
-  const boardWobble = Math.floor(seededNoise(raceNumber + 19, horseId) * 4);
+  const boardWobble = Math.floor(seededNoise(raceNumber + 19, horseId, raceSeed) * 4);
 
   return clamp(Math.round(4 + longshotBonus + boardWobble), 3, 12);
 }
 
-export function getBettingBoard(raceNumber: number): HorseBet[] {
+export function getBettingBoard(raceNumber: number, raceSeed = 0): HorseBet[] {
   const board: HorseBet[] = horses.map((horse) => ({
     id: `board-winner-${horse.id}`,
     kind: "winner",
     first: horse.id,
     amount: 0,
-    odds: getWinnerOdds(horse.id, raceNumber),
+    odds: getWinnerOdds(horse.id, raceNumber, raceSeed),
   }));
 
   horses.forEach((first) => {
@@ -218,7 +223,7 @@ export function getBettingBoard(raceNumber: number): HorseBet[] {
         first: first.id,
         second: second.id,
         amount: 0,
-        odds: getExactaOdds(first.id, second.id, raceNumber),
+        odds: getExactaOdds(first.id, second.id, raceNumber, raceSeed),
       });
     });
   });
@@ -226,8 +231,8 @@ export function getBettingBoard(raceNumber: number): HorseBet[] {
   return board;
 }
 
-export function getOddsBoard(raceNumber: number): HorseBet[] {
-  return getBettingBoard(raceNumber);
+export function getOddsBoard(raceNumber: number, raceSeed = 0): HorseBet[] {
+  return getBettingBoard(raceNumber, raceSeed);
 }
 
 export function getHorse(id: HorseId): HorseDefinition {
@@ -240,8 +245,8 @@ export function getHorse(id: HorseId): HorseDefinition {
   return horse;
 }
 
-function seededNoise(raceNumber: number, horseId: number): number {
-  const raw = Math.sin((raceNumber + 1) * 127.1 + horseId * 311.7) * 43758.5453;
+function seededNoise(raceNumber: number, horseId: number, raceSeed: number): number {
+  const raw = Math.sin((raceNumber + 1) * 127.1 + horseId * 311.7 + raceSeed * 0.0137) * 43758.5453;
   return raw - Math.floor(raw);
 }
 

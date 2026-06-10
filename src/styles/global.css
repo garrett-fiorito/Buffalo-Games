@@ -1836,16 +1836,19 @@ body.mini-golf-game-active {
 .roulette-wheel-shell {
   position: relative;
   display: grid;
-  width: min(100%, 420px);
+  --roulette-wheel-size: min(78vw, 360px);
+  --roulette-pocket-offset: calc(var(--roulette-wheel-size) * -0.461);
+  --roulette-ball-offset: calc(var(--roulette-wheel-size) * -0.517);
+  width: min(100%, calc(var(--roulette-wheel-size) + 58px));
   aspect-ratio: 1;
   place-items: center;
 }
 
 .roulette-wheel {
   position: relative;
-  width: 360px;
-  height: 360px;
-  border: 16px solid #2a150b;
+  width: var(--roulette-wheel-size);
+  height: var(--roulette-wheel-size);
+  border: max(10px, calc(var(--roulette-wheel-size) * 0.044)) solid #2a150b;
   border-radius: 50%;
   background:
     radial-gradient(circle at 50% 50%, #090806 0 22%, transparent 22.5%),
@@ -1902,14 +1905,21 @@ body.mini-golf-game-active {
   top: 50%;
   left: 50%;
   display: grid;
-  width: 34px;
-  height: 22px;
-  margin: -11px 0 0 -17px;
+  width: max(28px, calc(var(--roulette-wheel-size) * 0.094));
+  height: max(20px, calc(var(--roulette-wheel-size) * 0.061));
+  margin: calc(max(20px, calc(var(--roulette-wheel-size) * 0.061)) / -2) 0 0
+    calc(max(28px, calc(var(--roulette-wheel-size) * 0.094)) / -2);
   place-items: center;
   border-radius: 999px;
   color: var(--color-cream);
-  font-size: 0.68rem;
+  font-size: clamp(0.58rem, 2.2vw, 0.68rem);
   font-weight: 950;
+}
+
+.roulette-wheel-pocket--active {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: 2px;
+  box-shadow: 0 0 18px rgba(240, 198, 106, 0.7);
 }
 
 .roulette-wheel-pocket--green {
@@ -1926,7 +1936,7 @@ body.mini-golf-game-active {
 
 .roulette-wheel-center {
   position: absolute;
-  inset: 118px;
+  inset: calc(var(--roulette-wheel-size) * 0.328);
   display: grid;
   place-items: center;
   border: 2px solid rgba(240, 198, 106, 0.75);
@@ -1944,9 +1954,10 @@ body.mini-golf-game-active {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
+  width: max(13px, calc(var(--roulette-wheel-size) * 0.05));
+  height: max(13px, calc(var(--roulette-wheel-size) * 0.05));
+  margin: calc(max(13px, calc(var(--roulette-wheel-size) * 0.05)) / -2) 0 0
+    calc(max(13px, calc(var(--roulette-wheel-size) * 0.05)) / -2);
   border-radius: 50%;
   background: #f6ead0;
   box-shadow:
@@ -2219,6 +2230,43 @@ body.mini-golf-game-active {
   max-height: calc(100vh - 170px);
   min-height: 520px;
   border-radius: var(--radius);
+}
+
+.horse-fullscreen-button {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(215, 164, 72, 0.46);
+  border-radius: var(--radius);
+  color: var(--color-cream);
+  background: rgba(5, 5, 5, 0.72);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.horse-fullscreen-button:hover {
+  border-color: rgba(240, 198, 106, 0.78);
+}
+
+.horse-table-shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #050505;
+}
+
+.horse-table-shell:fullscreen .horse-canvas {
+  width: min(100vw, calc((100vh - 24px) * 1.625));
+  min-height: 0;
+  max-height: calc(100vh - 24px);
 }
 
 .horse-panel {
@@ -2778,15 +2826,6 @@ input[type="range"] {
 
   .horse-canvas {
     min-height: 360px;
-  }
-
-  .roulette-wheel {
-    width: 310px;
-    height: 310px;
-  }
-
-  .roulette-wheel-pocket {
-    transform-origin: 17px 166px;
   }
 
   .roulette-felt {

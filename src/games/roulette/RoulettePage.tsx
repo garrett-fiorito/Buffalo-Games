@@ -65,6 +65,7 @@ export function RoulettePage() {
   const resultText = getResultText(state);
   const goldenCandidates = getGoldenBallCandidates(state.spinIndex);
   const goldenPocket = getGoldenBallPocket(state.spinIndex);
+  const visibleWinningValue = pendingPocket?.value ?? state.lastResult?.pocket.value ?? null;
 
   const betLookup = useMemo(() => {
     return new Map(state.bets.map((bet) => [bet.id, bet.amount]));
@@ -90,9 +91,8 @@ export function RoulettePage() {
 
     const nextPocket = pickSpinPocket(state.spinIndex);
     const pocketIndex = americanWheelSequence.indexOf(nextPocket.value);
-    const targetAngle = 360 - pocketIndex * pocketAngle;
-    const nextWheelRotation = wheelRotation + 360 * 6 + targetAngle;
-    const nextBallRotation = -(360 * 8 + targetAngle + 10);
+    const nextWheelRotation = getNextWheelRotation(wheelRotation, pocketIndex);
+    const nextBallRotation = ballRotation - 360 * 8 - pocketIndex * pocketAngle - 18;
 
     setPendingPocket(nextPocket);
     setWheelRotation(nextWheelRotation);
@@ -126,8 +126,12 @@ export function RoulettePage() {
               {rouletteWheel.map((pocket, index) => (
                 <span
                   key={pocket.value}
-                  className={`roulette-wheel-pocket roulette-wheel-pocket--${pocket.color}`}
-                  style={{ transform: `rotate(${index * pocketAngle}deg) translateY(-166px)` }}
+                  className={`roulette-wheel-pocket roulette-wheel-pocket--${pocket.color}${
+                    visibleWinningValue === pocket.value ? " roulette-wheel-pocket--active" : ""
+                  }`}
+                  style={{
+                    transform: `rotate(${index * pocketAngle}deg) translateY(var(--roulette-pocket-offset))`,
+                  }}
                 >
                   {pocket.value}
                 </span>
@@ -139,7 +143,7 @@ export function RoulettePage() {
             </div>
             <div
               className={`roulette-ball ${state.phase === "spinning" ? "roulette-ball--spinning" : ""}`}
-              style={{ transform: `rotate(${ballRotation}deg) translateY(-186px)` }}
+              style={{ transform: `rotate(${ballRotation}deg) translateY(var(--roulette-ball-offset))` }}
             />
           </div>
 
@@ -361,4 +365,16 @@ function getResultText(state: RouletteState): string {
 function pickSpinPocket(spinIndex: number): RoulettePocket {
   const index = (spinIndex * 11 + Math.floor(Date.now() / 997)) % rouletteWheel.length;
   return rouletteWheel[index];
+}
+
+function getNextWheelRotation(currentRotation: number, pocketIndex: number): number {
+  const targetAngle = 360 - pocketIndex * pocketAngle;
+  const nextBaseRotation = (Math.floor(currentRotation / 360) + 6) * 360;
+  let nextRotation = nextBaseRotation + targetAngle;
+
+  while (nextRotation <= currentRotation + 720) {
+    nextRotation += 360;
+  }
+
+  return nextRotation;
 }

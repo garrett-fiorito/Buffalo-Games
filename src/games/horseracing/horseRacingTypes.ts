@@ -43,5 +43,6 @@ export type HorseRaceState = {
   betAmount: number;
   bets: HorseBet[];
   raceNumber: number;
+  raceSeed: number;
   lastResult: HorseRaceResult | null;
 };
