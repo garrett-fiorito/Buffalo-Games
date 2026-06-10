@@ -2260,22 +2260,22 @@ body.mini-golf-game-active {
   font-weight: 900;
 }
 
+.roulette-outside {
+  background: rgba(5, 5, 5, 0.2);
+}
+
 .roulette-number--red,
-.roulette-outside--red {
+.roulette-outside.roulette-outside--red {
   background: #c9152a;
 }
 
 .roulette-number--black,
-.roulette-outside--black {
+.roulette-outside.roulette-outside--black {
   background: #111;
 }
 
 .roulette-number--green {
   background: #0b7f43;
-}
-
-.roulette-outside {
-  background: rgba(5, 5, 5, 0.2);
 }
 
 .roulette-row-bet {
@@ -2315,12 +2315,12 @@ body.mini-golf-game-active {
   z-index: 4;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(246, 234, 208, 0.82);
+  border: 1px solid rgba(246, 234, 208, 0.58);
   color: var(--color-cream);
-  background: rgba(240, 198, 106, 0.72);
+  background: rgba(240, 198, 106, 0.42);
   box-shadow:
-    0 0 0 2px rgba(4, 56, 34, 0.72),
-    0 0 12px rgba(240, 198, 106, 0.42);
+    0 0 0 1px rgba(4, 56, 34, 0.62),
+    0 0 8px rgba(240, 198, 106, 0.26);
   pointer-events: auto;
 }
 
@@ -2332,16 +2332,16 @@ body.mini-golf-game-active {
 }
 
 .roulette-inside-bet--horizontal {
-  width: 12px;
-  height: 24px;
+  width: 8px;
+  height: 22px;
   border-radius: 999px;
   justify-self: center;
   align-self: center;
 }
 
 .roulette-inside-bet--vertical {
-  width: 24px;
-  height: 12px;
+  width: 22px;
+  height: 8px;
   border-radius: 999px;
   justify-self: center;
   align-self: center;
@@ -2349,8 +2349,8 @@ body.mini-golf-game-active {
 
 .roulette-inside-bet--corner,
 .roulette-inside-bet--zero-split {
-  width: 17px;
-  height: 17px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   justify-self: center;
   align-self: center;
